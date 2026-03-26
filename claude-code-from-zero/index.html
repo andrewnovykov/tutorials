@@ -1,0 +1,2809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code From Zero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+<style>
+:root {
+  --bg-primary: #0f1117;
+  --bg-secondary: #161822;
+  --bg-tertiary: #1c1f2e;
+  --bg-card: #1e2030;
+  --bg-code: #12141f;
+  --text-primary: #e2e4f0;
+  --text-secondary: #a0a4c0;
+  --text-muted: #6b7094;
+  --accent: #7c6aef;
+  --accent-light: #9d8ff5;
+  --accent-glow: rgba(124,106,239,0.15);
+  --green: #4ade80;
+  --green-dim: #22c55e;
+  --yellow: #facc15;
+  --yellow-dim: #ca8a04;
+  --red: #f87171;
+  --red-dim: #dc2626;
+  --orange: #fb923c;
+  --blue: #60a5fa;
+  --border: #2a2d42;
+  --border-light: #353852;
+  --sidebar-width: 300px;
+  --topbar-height: 56px;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --transition: 0.25s ease;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f8f9fc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f1f5;
+  --bg-card: #ffffff;
+  --bg-code: #f5f6fa;
+  --text-primary: #1a1c2e;
+  --text-secondary: #4a4e6a;
+  --text-muted: #8890b5;
+  --accent: #6c5ce7;
+  --accent-light: #7c6aef;
+  --accent-glow: rgba(108,92,231,0.1);
+  --border: #e0e2ee;
+  --border-light: #d0d3e2;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+code, pre, .code-header .file-path {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ---- TOP BAR ---- */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--topbar-height);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px;
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+}
+.topbar .hamburger {
+  display: none;
+  background: none; border: none; color: var(--text-primary);
+  font-size: 22px; cursor: pointer; margin-right: 12px;
+  padding: 4px 8px; border-radius: var(--radius-sm);
+}
+.topbar .hamburger:hover { background: var(--bg-tertiary); }
+.topbar .logo {
+  font-weight: 700; font-size: 16px;
+  color: var(--accent-light);
+  white-space: nowrap;
+}
+.topbar .logo span { color: var(--text-secondary); font-weight: 400; }
+
+.progress-wrap {
+  flex: 1; margin: 0 24px; max-width: 400px;
+}
+.progress-label {
+  font-size: 11px; color: var(--text-muted);
+  margin-bottom: 4px; font-weight: 500;
+}
+.progress-bar {
+  height: 6px; background: var(--bg-tertiary);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  border-radius: 3px; transition: width 0.5s ease;
+  width: 0%;
+}
+
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border);
+  color: var(--text-secondary); border-radius: var(--radius-sm);
+  padding: 6px 10px; cursor: pointer; font-size: 16px;
+  transition: var(--transition);
+}
+.theme-toggle:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+  position: fixed; top: var(--topbar-height); left: 0;
+  width: var(--sidebar-width); height: calc(100vh - var(--topbar-height));
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  overflow-y: auto; z-index: 900;
+  display: flex; flex-direction: column;
+  transition: transform var(--transition);
+}
+.sidebar-search {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-search input {
+  width: 100%; padding: 8px 12px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  outline: none; transition: var(--transition);
+}
+.sidebar-search input::placeholder { color: var(--text-muted); }
+.sidebar-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+.sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; cursor: pointer;
+  color: var(--text-secondary); font-size: 13px;
+  transition: var(--transition); text-decoration: none;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.nav-item.active {
+  background: var(--accent-glow);
+  color: var(--accent-light);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.nav-item.completed .nav-check { color: var(--green); }
+.nav-check { font-size: 14px; min-width: 18px; text-align: center; }
+.nav-num { font-size: 11px; font-weight: 600; color: var(--text-muted); min-width: 22px; }
+.nav-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-meta { display: flex; gap: 6px; align-items: center; }
+.nav-time { font-size: 10px; color: var(--text-muted); }
+.diff-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.diff-dot.beginner { background: var(--green); }
+.diff-dot.intermediate { background: var(--yellow); }
+.diff-dot.advanced { background: var(--red); }
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.reset-btn {
+  width: 100%; padding: 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-muted);
+  font-size: 12px; cursor: pointer; transition: var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+.reset-btn:hover { border-color: var(--red-dim); color: var(--red); }
+
+/* ---- MAIN CONTENT ---- */
+.main {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--topbar-height);
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.tutorial {
+  display: none;
+  padding: 48px 64px;
+  max-width: 900px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease;
+}
+.tutorial.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tutorial-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.tutorial-number {
+  display: inline-block;
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  background: var(--accent-glow);
+  padding: 4px 10px; border-radius: 20px;
+  margin-bottom: 12px; letter-spacing: 1px;
+}
+.tutorial-header h2 {
+  font-size: 32px; font-weight: 700;
+  line-height: 1.2; margin-bottom: 16px;
+  color: var(--text-primary);
+}
+.meta { display: flex; gap: 12px; flex-wrap: wrap; }
+.time-badge, .diff-badge {
+  font-size: 12px; padding: 4px 12px;
+  border-radius: 20px; font-weight: 500;
+}
+.time-badge {
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.diff-badge.beginner { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.diff-badge.intermediate { background: rgba(250,204,21,0.1); color: var(--yellow); border: 1px solid rgba(250,204,21,0.2); }
+.diff-badge.advanced { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+
+/* Content elements */
+.tutorial h3 {
+  font-size: 22px; font-weight: 700;
+  margin: 40px 0 16px;
+  color: var(--text-primary);
+}
+.tutorial h4 {
+  font-size: 17px; font-weight: 600;
+  margin: 28px 0 12px; color: var(--text-primary);
+}
+.tutorial p {
+  margin-bottom: 16px; color: var(--text-secondary);
+  font-size: 15px;
+}
+.tutorial ul, .tutorial ol {
+  margin-bottom: 16px; padding-left: 24px;
+  color: var(--text-secondary); font-size: 15px;
+}
+.tutorial li { margin-bottom: 6px; }
+.tutorial strong { color: var(--text-primary); }
+.tutorial a { color: var(--accent-light); text-decoration: none; }
+.tutorial a:hover { text-decoration: underline; }
+
+.tutorial > .objectives,
+.tutorial > .context,
+.tutorial > .walkthrough,
+.tutorial > .challenge,
+.tutorial > .takeaways { margin-bottom: 32px; }
+
+/* Code blocks */
+.code-block {
+  margin: 16px 0 24px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-code);
+}
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+}
+.code-header .file-path {
+  font-size: 12px; color: var(--text-muted);
+}
+.copy-btn {
+  background: none; border: 1px solid var(--border);
+  color: var(--text-muted); font-size: 11px;
+  padding: 3px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: var(--transition);
+}
+.copy-btn:hover { color: var(--text-primary); border-color: var(--accent); }
+.copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+.code-block pre {
+  padding: 16px; margin: 0;
+  overflow-x: auto; font-size: 13px; line-height: 1.6;
+}
+.code-block pre code {
+  background: none !important; padding: 0 !important;
+}
+
+/* Inline code */
+.tutorial p code, .tutorial li code, .tutorial td code {
+  background: var(--bg-tertiary);
+  padding: 2px 7px; border-radius: 4px;
+  font-size: 13px; color: var(--accent-light);
+  border: 1px solid var(--border);
+}
+
+/* Tables */
+.tutorial table {
+  width: 100%; border-collapse: collapse;
+  margin: 16px 0 24px; font-size: 14px;
+}
+.tutorial th {
+  text-align: left; padding: 10px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary); font-weight: 600;
+}
+.tutorial td {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+/* Challenge card */
+.challenge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 12px 0;
+}
+.challenge-card details {
+  margin-top: 12px;
+}
+.challenge-card summary {
+  cursor: pointer; color: var(--accent-light);
+  font-weight: 500; font-size: 14px;
+}
+.challenge-card details p {
+  margin-top: 8px; padding-left: 16px;
+  border-left: 2px solid var(--border);
+}
+
+/* Callout boxes */
+.callout {
+  padding: 16px 20px; border-radius: var(--radius);
+  margin: 16px 0 24px; font-size: 14px;
+  border: 1px solid;
+}
+.callout.info {
+  background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.2);
+  color: var(--blue);
+}
+.callout.warn {
+  background: rgba(250,204,21,0.08); border-color: rgba(250,204,21,0.2);
+  color: var(--yellow);
+}
+.callout.tip {
+  background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.2);
+  color: var(--green);
+}
+.callout.cross-tool {
+  background: rgba(251,146,60,0.08); border-color: rgba(251,146,60,0.2);
+  color: var(--orange);
+}
+.callout strong { color: inherit; }
+.callout code { color: inherit; border-color: currentColor; opacity: 0.8; }
+
+/* Tutorial footer */
+.tutorial-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 48px;
+  padding-top: 24px; border-top: 1px solid var(--border);
+}
+.nav-btn {
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 14px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: var(--transition);
+}
+.nav-btn:hover { border-color: var(--accent); color: var(--accent-light); }
+.nav-btn:disabled { opacity: 0.3; cursor: default; }
+.complete-btn {
+  padding: 10px 24px; border-radius: var(--radius-sm);
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: #fff; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: var(--transition);
+}
+.complete-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+.complete-btn.done { background: var(--green-dim); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .topbar .hamburger { display: block; }
+  .main { margin-left: 0; }
+  .tutorial { padding: 24px 20px; }
+  .tutorial-header h2 { font-size: 24px; }
+  .progress-wrap { display: none; }
+}
+
+/* Print */
+@media print {
+  .topbar, .sidebar, .tutorial-footer, .theme-toggle, .copy-btn { display: none !important; }
+  .main { margin-left: 0; }
+  .tutorial { display: block !important; page-break-after: always; padding: 20px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Overlay for mobile */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 899;
+}
+.sidebar-overlay.visible { display: block; }
+
+/* Confetti keyframes */
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100px) rotate(720deg); opacity: 0; }
+}
+.confetti {
+  position: fixed; pointer-events: none; z-index: 9999;
+  width: 8px; height: 8px; border-radius: 2px;
+  animation: confetti-fall 1.5s ease-out forwards;
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">&#9776;</button>
+  <div class="logo">Claude Code From Zero <span>&#183; Complete Guide</span></div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span id="progress-text">0 of 13 completed</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+  <div class="topbar-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light mode">&#9790;</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-search">
+    <input type="text" id="search-input" placeholder="Search tutorials... ( / )" aria-label="Search tutorials">
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-footer">
+    <button class="reset-btn" onclick="resetProgress()">Reset Progress</button>
+  </div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- MAIN CONTENT -->
+<div class="main" id="main-content">
+
+<!-- ============ TUTORIAL 1 ============ -->
+<section id="tutorial-1" class="tutorial" data-difficulty="beginner" data-time="15">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 01</span>
+  <h2>What Is Claude Code?</h2>
+  <div class="meta">
+    <span class="time-badge">15 min</span>
+    <span class="diff-badge beginner">Beginner</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>What Claude Code is and how it works</li>
+    <li>The <code>.claude/</code> folder system: agents, commands, skills, hooks</li>
+    <li>Why structure beats raw prompting</li>
+    <li>The building blocks that turn Claude into an engineering system</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Claude Code is Anthropic's CLI for Claude — an AI coding assistant that runs in your terminal. Out of the box it's powerful, but raw prompting without structure leads to inconsistent results. The real power comes from the <strong><code>.claude/</code> folder</strong> — a convention-based system of agents, commands, skills, and hooks that transforms Claude from a chatbot into a repeatable engineering system.</p>
+  <p>Think of it this way: Claude Code is the engine, the <code>.claude/</code> folder is the transmission, steering, and instruments that let you actually drive.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: The Five Pillars</h4>
+  <p>Claude Code's extension system is organized around five core concepts:</p>
+  <table>
+    <thead><tr><th>Pillar</th><th>What It Does</th><th>Location</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Agents</strong></td><td>Specialized AI workers with scoped tools and models</td><td><code>.claude/agents/*.md</code></td></tr>
+      <tr><td><strong>Commands</strong></td><td>Slash commands that trigger workflows</td><td><code>.claude/commands/*.md</code></td></tr>
+      <tr><td><strong>Skills</strong></td><td>Domain knowledge packages loaded on demand</td><td><code>.claude/skills/*/SKILL.md</code></td></tr>
+      <tr><td><strong>Hooks</strong></td><td>Event-driven automations before/after tool calls</td><td><code>settings.json</code></td></tr>
+      <tr><td><strong>CLAUDE.md</strong></td><td>Project brain — always-on rules and context</td><td><code>CLAUDE.md</code></td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 2: The Architecture</h4>
+  <p>Here's how a typical Claude Code project is organized:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Project Structure</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">your-project/
+├── .claude/
+│   ├── agents/          # Specialized AI subagents
+│   ├── commands/        # Slash commands (workflows)
+│   ├── skills/          # Domain knowledge packages
+│   │   └── my-skill/
+│   │       ├── SKILL.md       # Core knowledge
+│   │       ├── FORMAT.md      # Output format spec
+│   │       ├── VOICE.md       # Tone and terminology
+│   │       ├── workflows/     # Task playbooks
+│   │       └── references/    # On-demand docs
+│   ├── workflows/       # Multi-agent pipeline definitions
+│   ├── settings.json    # Hooks, permissions, MCP servers
+│   └── mcp.json         # MCP server configurations
+├── CLAUDE.md            # Project brain (always loaded)
+└── src/                 # Your actual code</code></pre>
+  </div>
+
+  <h4>Step 3: Why Structure Matters</h4>
+  <p>Without structure, every Claude session starts from scratch. You tell it your standards, hope it remembers your patterns, and manually catch mistakes. With the <code>.claude/</code> system:</p>
+  <ul>
+    <li><strong>Agents</strong> handle planning, reviewing, and testing autonomously</li>
+    <li><strong>Hooks</strong> catch security violations <em>before</em> code is committed</li>
+    <li><strong>Skills</strong> inject the right domain knowledge at the right time</li>
+    <li><strong>CLAUDE.md</strong> enforces your standards without repeating yourself</li>
+  </ul>
+
+  <h4>Step 4: The Key Principle — Roles, Not Hierarchy</h4>
+  <p>Every component in the <code>.claude/</code> system is a <strong>role, not a hierarchy level</strong>. Commands, skills, agents — they're all callable from anywhere:</p>
+  <ul>
+    <li><strong>Commands</strong> — reusable operations, callable by humans AND agents</li>
+    <li><strong>Skills</strong> — knowledge packages any agent can load</li>
+    <li><strong>Agents</strong> — autonomous workers spawned via the Agent tool</li>
+    <li><strong>MCP Servers</strong> — capability extensions shared by all components</li>
+  </ul>
+
+  <div class="callout cross-tool">
+    <strong>Cross-Tool Insight:</strong> These concepts transfer to other AI coding tools. Cursor uses <code>.cursorrules</code>. Codex uses <code>AGENTS.md</code> and <code>.codex/config.toml</code>. The patterns you learn here apply across all AI tools.
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Claude Code + the <code>.claude/</code> folder = a structured engineering system</li>
+    <li>Five pillars: agents, commands, skills, hooks, CLAUDE.md</li>
+    <li>Every component is a role, not a hierarchy — callable from anywhere</li>
+    <li>Structure beats raw prompting — repeatable workflows produce better results</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(0)" disabled>&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(1)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(2)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 2 ============ -->
+<section id="tutorial-2" class="tutorial" data-difficulty="beginner" data-time="20">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 02</span>
+  <h2>Getting Started — Setup Your Project</h2>
+  <div class="meta">
+    <span class="time-badge">20 min</span>
+    <span class="diff-badge beginner">Beginner</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>How to install Claude Code CLI</li>
+    <li>How to create the <code>.claude/</code> folder structure</li>
+    <li>How to write your first agent, command, and skill</li>
+    <li>How to verify everything works</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Setting up Claude Code is straightforward. The CLI installs globally, and the <code>.claude/</code> folder lives inside your project. No build tools, no compilation — just markdown files that Claude reads automatically.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Install Claude Code</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Install Claude Code CLI globally
+npm install -g @anthropic-ai/claude-code
+
+# Verify installation
+claude --version
+
+# Start Claude Code in your project
+cd your-project
+claude</code></pre>
+  </div>
+
+  <h4>Step 2: Create the .claude/ Folder Structure</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Create the core directory structure
+mkdir -p .claude/agents
+mkdir -p .claude/commands
+mkdir -p .claude/skills
+mkdir -p .claude/workflows
+
+# Create your project brain
+touch CLAUDE.md</code></pre>
+  </div>
+
+  <h4>Step 3: Create Your First CLAUDE.md</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">CLAUDE.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-markdown"># My Project
+
+## Overview
+Brief description of what this project does and tech stack.
+
+## Build & Test
+npm install      # Install dependencies
+npm test         # Run tests
+npm run build    # Build the project
+
+## Conventions
+- Use TypeScript strict mode
+- Prefer functional patterns
+- Error handling: always wrap with context
+- Tests: table-driven with descriptive names</code></pre>
+  </div>
+
+  <h4>Step 4: Verify It Works</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Start Claude Code — it will auto-load your CLAUDE.md
+claude
+
+# Try asking Claude about your project
+> What conventions does this project use?
+
+# Claude should reference your CLAUDE.md rules</code></pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>Tip:</strong> Claude Code automatically discovers <code>.claude/agents/</code>, <code>.claude/commands/</code>, and <code>.claude/skills/</code> folders. Any <code>.md</code> file you place in these folders becomes available immediately — no registration needed.
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Create the <code>.claude/</code> folder structure in your project, write a minimal CLAUDE.md, and start a Claude Code session. Ask Claude "What do you know about this project?" to verify it reads your config.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>Start with just 10-20 lines in CLAUDE.md covering: project overview, how to build/test, and your top 3 conventions. You can expand later as you discover repeated corrections.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Claude Code installs as a global npm package</li>
+    <li>The <code>.claude/</code> folder structure is convention-based — just create the folders</li>
+    <li><code>CLAUDE.md</code> is auto-loaded every session — start small and grow</li>
+    <li>Agents, commands, and skills are just markdown files — no build step needed</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(1)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(2)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(3)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 3 ============ -->
+<section id="tutorial-3" class="tutorial" data-difficulty="beginner" data-time="25">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 03</span>
+  <h2>CLAUDE.md — Your Project Brain</h2>
+  <div class="meta">
+    <span class="time-badge">25 min</span>
+    <span class="diff-badge beginner">Beginner</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>What CLAUDE.md is and why it's the most important file in your project</li>
+    <li>How to structure a production-grade CLAUDE.md</li>
+    <li>Real-world examples from different tech stacks</li>
+    <li>How other tools (Codex AGENTS.md, Cursor rules) solve the same problem</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p><code>CLAUDE.md</code> is automatically loaded at the start of every Claude Code session. It tells Claude about your project, your conventions, your tech stack, and your rules. A well-crafted <code>CLAUDE.md</code> is the single highest-leverage thing you can do to improve Claude Code's output quality.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Anatomy of a Good CLAUDE.md</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">CLAUDE.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-markdown"># My SaaS App — Next.js + Supabase + Stripe
+
+## Project Overview
+A subscription management platform. Next.js 14 App Router,
+Supabase for auth/DB, Stripe for payments.
+
+## Critical Rules
+
+### 1. Code Organization
+- Many small files over few large files
+- High cohesion, low coupling
+- 200-400 lines typical, 800 max per file
+
+### 2. Code Style
+- Immutability always — never mutate objects or arrays
+- No console.log in production code
+- Proper error handling with try/catch
+- Input validation with Zod
+
+### 3. Testing
+- TDD: Write tests first
+- 80% minimum coverage
+- Unit tests for utilities, integration for APIs
+
+### 4. Security
+- No hardcoded secrets
+- Environment variables for sensitive data
+- Parameterized queries only
+
+## File Structure
+src/
+|-- app/              # Next.js app router
+|-- components/       # Reusable UI components
+|-- hooks/            # Custom React hooks
+|-- lib/              # Utility libraries
+|-- types/            # TypeScript definitions
+
+## Build & Test
+npm run dev          # Development server
+npm test             # Run test suite
+npm run build        # Production build
+npm run lint         # ESLint check
+
+## Key Patterns
+
+### API Response Format
+All API routes return this shape:
+interface ApiResponse&lt;T&gt; {
+  success: boolean
+  data?: T
+  error?: string
+}</code></pre>
+  </div>
+
+  <h4>Step 2: What to Include</h4>
+  <table>
+    <thead><tr><th>Section</th><th>Purpose</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Project Overview</strong></td><td>What this project does, tech stack</td><td>"Next.js SaaS with Supabase + Stripe"</td></tr>
+      <tr><td><strong>Critical Rules</strong></td><td>Non-negotiable conventions</td><td>"Never mutate state", "TDD always"</td></tr>
+      <tr><td><strong>File Structure</strong></td><td>Where things live</td><td>Directory tree with annotations</td></tr>
+      <tr><td><strong>Build &amp; Test</strong></td><td>How to build, test, lint</td><td><code>npm test</code>, 80% coverage</td></tr>
+      <tr><td><strong>Key Patterns</strong></td><td>Code examples of your conventions</td><td>API response format, error handling</td></tr>
+      <tr><td><strong>Environment</strong></td><td>Required env vars and setup</td><td>Required API keys, services</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 3: CLAUDE.md Best Practices</h4>
+  <ul>
+    <li><strong>Keep it under 100 lines</strong> — smaller context = faster, more focused responses</li>
+    <li><strong>Show code examples</strong> of your conventions, don't just describe them</li>
+    <li><strong>Include build/test commands</strong> — Claude needs to know how to verify its work</li>
+    <li><strong>Update it</strong> when you find yourself repeating the same corrections</li>
+    <li><strong>Use CLAUDE.md in subdirectories</strong> for folder-specific rules (they stack)</li>
+  </ul>
+
+  <div class="callout cross-tool">
+    <strong>Cross-Tool Equivalents:</strong> In Codex, the same concept is <code>AGENTS.md</code> — loaded at session start with project instructions. In Cursor, you use <code>.cursorrules</code> files. The pattern is universal: <em>tell the AI about your project upfront</em>.
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Create a <code>CLAUDE.md</code> for your own project. Include: project overview, critical rules, file structure, and how to run tests. Start a new Claude Code session and observe how it follows your conventions.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>Start small. A 20-line CLAUDE.md that covers your top 5 rules is better than a 500-line document Claude can't parse. Add sections as you discover repeated corrections.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>CLAUDE.md is automatically loaded every session — it's your highest-leverage config file</li>
+    <li>Cover: overview, rules, structure, build/test, key patterns</li>
+    <li>Show code examples of your conventions, don't just describe them</li>
+    <li>Same pattern exists in Codex (AGENTS.md) and Cursor (.cursorrules)</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(2)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(3)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(4)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 4 ============ -->
+<section id="tutorial-4" class="tutorial" data-difficulty="intermediate" data-time="30">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 04</span>
+  <h2>Agents — Your AI Team</h2>
+  <div class="meta">
+    <span class="time-badge">30 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>Agent anatomy: YAML frontmatter + markdown body</li>
+    <li>Key fields: name, description, model, tools, color, skills</li>
+    <li>Model routing: Opus vs Sonnet vs Haiku</li>
+    <li>Agent anti-patterns to avoid</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Instead of one AI doing everything, you create a <strong>team of specialists</strong>. A planner plans, a reviewer reviews, a tester writes tests. Each agent lives in <code>.claude/agents/</code> as a markdown file with YAML frontmatter defining its identity, tools, and model tier.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Agent Anatomy</h4>
+  <p>Every agent is a markdown file with YAML frontmatter:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/agents/code-reviewer.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+name: code-reviewer
+description: |
+  Reviews code changes for quality, security, and adherence to
+  project conventions. Use when reviewing PRs, after implementing
+  features, or before merging code.
+
+  Examples:
+  - "Review the changes in the auth module"
+  - "Check this PR for security issues"
+  - "Review my implementation before I merge"
+model: sonnet
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+---
+
+# IDENTITY
+
+You are a code reviewer specializing in quality, security,
+and convention adherence.
+
+# STEPS
+
+1. Read CLAUDE.md for project conventions
+   - Load project rules, coding style, testing requirements
+   - Note any project-specific patterns to check against
+
+2. Gather changed files
+   - Run `git diff --name-only` to find changed files
+   - Filter to relevant source files (skip configs, locks)
+
+3. Analyze code quality
+   - Check each file for bugs and logic errors
+   - Verify error handling completeness (try/catch, fallbacks)
+   - Check function size (&lt;50 lines), file size (&lt;800 lines)
+   - Look for mutation patterns, deep nesting, hardcoded values
+
+4. Security audit
+   - Flag OWASP Top 10: injection, XSS, broken auth, secrets
+   - Check input validation on all user-facing functions
+   - Verify parameterized queries for all DB calls
+   - Scan for hardcoded API keys, tokens, passwords
+
+5. Verify test coverage
+   - Check that new code has corresponding tests
+   - Verify edge cases are covered (null, empty, boundary)
+   - Flag untested public functions
+
+6. Generate report
+   - List findings by severity: CRITICAL, HIGH, MEDIUM, LOW
+   - Include: file, line, description, suggested fix
+   - Summarize total findings and pass/fail recommendation
+
+# RULES
+
+ALWAYS_DO:
+  - Decompose work into tasks with TaskCreate before starting
+  - Mark each task in_progress/completed as you go
+  - Read the project's CLAUDE.md first for conventions
+  - Focus on substance over style
+  - Report confidence level for each finding
+
+NEVER_DO:
+  - Modify any files (you are read-only)
+  - Skip task tracking — every phase must be tracked
+  - Report stylistic preferences unless they violate conventions
+  - Flag issues in unchanged code unless CRITICAL</code></pre>
+  </div>
+
+  <h4>Step 2: Frontmatter Fields</h4>
+  <table>
+    <thead><tr><th>Field</th><th>Required</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code></td><td>Yes</td><td>Kebab-case identifier (e.g., <code>code-reviewer</code>)</td></tr>
+      <tr><td><code>description</code></td><td>Yes</td><td>When to use this agent + 2-4 example triggers (50-500 chars)</td></tr>
+      <tr><td><code>model</code></td><td>Yes</td><td>Model tier: <code>opus</code>, <code>sonnet</code>, or <code>haiku</code></td></tr>
+      <tr><td><code>tools</code></td><td>No</td><td>Scoped tool list (Read, Write, Edit, Bash, Grep, Glob, Agent)</td></tr>
+      <tr><td><code>color</code></td><td>No</td><td>Display color: <code>red</code>, <code>blue</code>, <code>green</code>, <code>yellow</code>, <code>cyan</code>, <code>magenta</code></td></tr>
+      <tr><td><code>skills</code></td><td>No</td><td>List of skill names this agent should load</td></tr>
+      <tr><td><code>memory</code></td><td>No</td><td>Path to persistent memory file</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 3: Model Routing Strategy</h4>
+  <p>Route tasks to the right model tier based on complexity:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Model Routing Guide</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">Haiku  ($)   — classification, boilerplate, narrow edits, fast tasks
+Sonnet ($$)  — implementation, refactors, code review, testing
+Opus   ($$$) — architecture, root-cause analysis, multi-file reasoning
+
+Rule: Escalate model tier ONLY when lower tier fails
+      with a clear reasoning gap.</code></pre>
+  </div>
+
+  <h4>Step 4: Tool Scoping as Security</h4>
+  <p>Limit what each agent can do — this is a security pattern:</p>
+  <ul>
+    <li><strong>Planner</strong>: <code>["Read", "Grep", "Glob"]</code> — read-only, cannot modify code</li>
+    <li><strong>Reviewer</strong>: <code>["Read", "Grep", "Glob", "Bash"]</code> — can run git diff, still no writes</li>
+    <li><strong>Developer</strong>: <code>["Read", "Write", "Edit", "Bash", "Grep", "Glob"]</code> — full access</li>
+  </ul>
+
+  <h4>Step 5: Agent Anti-Patterns</h4>
+  <div class="callout warn">
+    <strong>Common Agent Anti-Patterns:</strong>
+    <ul>
+      <li><strong>Vague trigger phrases</strong> — "Use for general tasks" tells Claude nothing. Be specific with examples.</li>
+      <li><strong>Over-permissioned tools</strong> — Giving Write/Edit to a reviewer agent defeats the purpose of separation.</li>
+      <li><strong>No examples in description</strong> — Always include 2-4 concrete example prompts that trigger this agent.</li>
+      <li><strong>Missing ALWAYS_DO/NEVER_DO</strong> — Without explicit rules, agents drift from their role.</li>
+      <li><strong>God Agent</strong> — One agent doing everything. Decompose into focused specialists.</li>
+      <li><strong>Skillless Agent</strong> — Every agent should reference at least one skill for domain knowledge.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Create a <code>.claude/agents/planner.md</code> agent with read-only tools (<code>Read</code>, <code>Grep</code>, <code>Glob</code>), the <code>opus</code> model, and a description with 3 example triggers. Give it ALWAYS_DO and NEVER_DO rules.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>The planner should NEVER write code — only read and analyze. Its ALWAYS_DO should include: "Wait for user confirmation before any implementation begins." Its NEVER_DO should include: "Modify any files."</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Agents are markdown files with YAML frontmatter in <code>.claude/agents/</code></li>
+    <li>Key fields: name (kebab-case), description (with examples), model, tools</li>
+    <li>Tool scoping limits what each agent can do — security by design</li>
+    <li>Model routing (Opus/Sonnet/Haiku) balances quality vs cost</li>
+    <li>Avoid anti-patterns: vague triggers, over-permissioning, god agents</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(3)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(4)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(5)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 5 ============ -->
+<section id="tutorial-5" class="tutorial" data-difficulty="intermediate" data-time="25">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 05</span>
+  <h2>Commands — Slash Command Definitions</h2>
+  <div class="meta">
+    <span class="time-badge">25 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>How slash commands work in Claude Code</li>
+    <li>Command anatomy: <code>name</code> + <code>description</code> frontmatter + body</li>
+    <li>How commands dispatch work to agents via <code>Task()</code></li>
+    <li>Building workflow chains: /plan &rarr; /tdd &rarr; /review</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Commands are the user-facing interface to your agent system. Instead of writing paragraphs explaining what you want, you type <code>/plan</code> and a specialist agent takes over. Commands live in <code>.claude/commands/</code> as markdown files. The file name becomes the slash command: <code>plan.md</code> &rarr; <code>/plan</code>. User arguments are available as <code>$ARGUMENTS</code>.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Command Anatomy</h4>
+  <p>Every command has YAML frontmatter with <code>name</code> and <code>description</code>, plus a markdown body:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/commands/plan.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+name: plan
+description: "Analyze requirements and create a step-by-step
+  implementation plan. Usage: /plan Add auth to the API"
+---
+
+Analyze requirements and create a step-by-step implementation
+plan for the requested feature.
+
+Input: $ARGUMENTS
+
+## FLOW
+1. Read CLAUDE.md for project conventions
+2. Scan relevant source files to understand current architecture
+3. Restate the requirements in your own words
+4. Identify risks and dependencies
+5. Create a phased implementation plan
+6. Present plan and WAIT for user confirmation
+
+## RULES
+ALWAYS_DO:
+  - Break work into phases of 15-minute units
+  - Identify the dominant risk for each phase
+  - Wait for explicit "go ahead" before any implementation
+
+NEVER_DO:
+  - Write, edit, or create any files
+  - Start implementation without user confirmation
+  - Skip the risk assessment step</code></pre>
+  </div>
+
+  <h4>Step 2: Frontmatter Fields</h4>
+  <table>
+    <thead><tr><th>Field</th><th>Required</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code></td><td>Yes</td><td>The slash command name (must match filename without <code>.md</code>)</td></tr>
+      <tr><td><code>description</code></td><td>Yes</td><td>Shown in <code>/</code> autocomplete. Include usage example with arguments.</td></tr>
+    </tbody>
+  </table>
+  <p>The body uses <code>$ARGUMENTS</code> to access whatever the user types after the command name. For example, <code>/plan Add user auth</code> makes <code>$ARGUMENTS</code> = <code>"Add user auth"</code>.</p>
+
+  <h4>Step 3: Commands That Dispatch to Agents</h4>
+  <p>The most powerful pattern: commands that launch subagents via <code>Task()</code>. This delegates complex work to a specialized agent while the command orchestrates:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/commands/write-test.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+name: write-test
+description: "Write a new E2E test from a Jira test case.
+  Usage: /write-test QA-0001"
+---
+
+Write a new E2E Playwright test from a Jira test case.
+
+Input: $ARGUMENTS
+
+Parse $ARGUMENTS to extract the test case ID (e.g., `QA-0001`).
+
+Launch the subagent:
+
+```
+Task(
+    description="Write and verify E2E test for $ARGUMENTS",
+    subagent_type="e2e-test-writer",
+    prompt="Write a new E2E test for test case $ARGUMENTS\n\n
+Follow the full workflow:\n
+1. Read test case from Jira\n
+2. Understand what to test\n
+3. Find similar tests in repo\n
+4. Plan the test structure and present for approval\n
+5. Write the test file, selectors, helpers\n
+6. Run and verify interactively\n
+7. Fix issues and burn test 3x\n
+8. Sync test case back to Jira\n
+9. Create branch and PR\n
+10. Final report"
+)
+```</code></pre>
+  </div>
+
+  <div class="callout info">
+    <strong>Key Pattern:</strong> The <code>Task()</code> call dispatches work to a subagent defined in <code>.claude/agents/</code>. The <code>subagent_type</code> matches the agent's <code>name</code> field. The <code>prompt</code> tells the agent exactly what to do. The command stays as the orchestrator — it delegates, it doesn't do the work itself.
+  </div>
+
+  <h4>Step 4: Simple Commands (No Agent Dispatch)</h4>
+  <p>Not all commands need agents. Simple commands can work directly:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/commands/review.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+name: review
+description: "Review code changes for quality and security.
+  Usage: /review"
+---
+
+Review all uncommitted code changes for quality, security,
+and convention adherence.
+
+## FLOW
+1. Run `git diff --name-only` to find changed files
+2. For each changed file, check for:
+   - CRITICAL: Hardcoded secrets, SQL injection, XSS
+   - HIGH: Missing error handling, large functions
+   - MEDIUM: Missing tests, mutation patterns
+3. Generate report with severity, location, description, fix
+4. Block commit if CRITICAL or HIGH issues found
+
+## RULES
+NEVER_DO:
+  - Skip the security check
+  - Auto-fix issues without showing the report first</code></pre>
+  </div>
+
+  <h4>Step 5: The Golden Workflow</h4>
+  <p>The most powerful pattern is chaining commands:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">The Golden Workflow</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># 1. PLAN — Understand the task before touching code
+> /plan Add real-time notifications to the app
+
+# 2. Implement (manually or via a /build command)
+
+# 3. REVIEW — Review the implementation
+> /review</code></pre>
+  </div>
+  <p>The key insight: <strong>/plan never writes code</strong>. It creates a plan and waits for your approval. This prevents Claude from charging ahead with the wrong approach.</p>
+
+  <h4>Step 6: Command Structure Best Practices</h4>
+  <table>
+    <thead><tr><th>Section</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code> (frontmatter)</td><td>The <code>/name</code> used to invoke the command</td></tr>
+      <tr><td><code>description</code> (frontmatter)</td><td>Shown in autocomplete — include usage example with args</td></tr>
+      <tr><td><code>$ARGUMENTS</code></td><td>User input after the command name</td></tr>
+      <tr><td><code>Task()</code></td><td>Dispatch work to a subagent — use for complex multi-step work</td></tr>
+      <tr><td><code>FLOW</code></td><td>Numbered steps — strict order, no skipping</td></tr>
+      <tr><td><code>RULES</code></td><td>ALWAYS_DO / NEVER_DO guardrails</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <strong>Command Anti-Patterns:</strong>
+    <ul>
+      <li><strong>Missing <code>name</code></strong> — Always include <code>name:</code> in frontmatter so the command is discoverable</li>
+      <li><strong>No usage example in description</strong> — Include "Usage: /name arg" so users know the syntax</li>
+      <li><strong>Inline complex logic</strong> — If a step needs 50+ lines, dispatch to a subagent with <code>Task()</code></li>
+      <li><strong>No phase structure</strong> — Commands without numbered FLOW steps produce unpredictable results</li>
+      <li><strong>Missing edge cases</strong> — Handle: empty $ARGUMENTS, no files changed, agent failure</li>
+      <li><strong>No final report</strong> — Every command should produce a visible output summary</li>
+    </ul>
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Create a <code>.claude/commands/test.md</code> command with <code>name: test</code> and a description including usage. It should: (1) parse $ARGUMENTS for a test scope, (2) run the test suite, (3) report coverage, (4) suggest tests for uncovered code. Bonus: dispatch a <code>test-runner</code> agent via <code>Task()</code>.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>The frontmatter should be: <code>name: test</code> and <code>description: "Run tests and report coverage. Usage: /test unit"</code>. For the Task() dispatch: <code>Task(description="Run tests", subagent_type="test-runner", prompt="Run $ARGUMENTS tests and report coverage")</code>.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Commands live in <code>.claude/commands/</code> — filename becomes the <code>/command</code></li>
+    <li>Frontmatter requires <code>name</code> and <code>description</code> (with usage example)</li>
+    <li><code>$ARGUMENTS</code> captures everything the user types after the command</li>
+    <li>Use <code>Task()</code> to dispatch complex work to subagents defined in <code>.claude/agents/</code></li>
+    <li>Simple commands use FLOW steps directly; complex ones delegate via <code>Task()</code></li>
+    <li>/plan NEVER writes code — it waits for your explicit approval</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(4)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(5)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(6)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 6 ============ -->
+<section id="tutorial-6" class="tutorial" data-difficulty="intermediate" data-time="30">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 06</span>
+  <h2>Skills — Domain Knowledge Packages</h2>
+  <div class="meta">
+    <span class="time-badge">30 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>What skills are and how they differ from CLAUDE.md rules</li>
+    <li>The full skill anatomy: SKILL.md, FORMAT.md, VOICE.md, workflows/, references/</li>
+    <li>Progressive disclosure: metadata &rarr; body &rarr; resources</li>
+    <li>How to create skills from your project's patterns</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>CLAUDE.md rules are always-on constraints. Skills are <strong>contextual expertise</strong> — loaded when relevant. When working on API code, an <code>api-design</code> skill activates. When writing tests, a <code>tdd-workflow</code> skill provides guidance. Skills keep the context window lean by loading only what's needed.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Skill Anatomy</h4>
+  <p>A skill is a folder with multiple files, each serving a specific purpose:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Skill Folder Structure</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">.claude/skills/git-commit/
+├── SKILL.md           # Core knowledge (required)
+├── FORMAT.md          # Output format specification (required)
+├── VOICE.md           # Tone, terminology, report structure (required)
+├── DRY_RUN.md         # Dry-run analysis behavior
+├── workflows/         # Task playbooks per task type
+│   ├── commit.md      # How to handle a normal commit
+│   ├── amend.md       # How to handle amend requests
+│   └── stage-review.md # How to review staging
+├── references/        # On-demand documentation
+│   └── conventional-commits.md
+└── scripts/           # Deterministic bash scripts</code></pre>
+  </div>
+
+  <h4>Step 2: SKILL.md — The Core</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/skills/git-commit/SKILL.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+name: git-commit
+description: |
+  Create semantic git commits using Conventional Commits.
+  Use when committing changes, reviewing staged files, or
+  amending recent commits.
+allowed-tools:
+  - Bash
+---
+
+# IDENTITY
+You create clean, semantic git commits following Conventional
+Commits specification.
+
+# WORKFLOWS MAP
+- commit.md — Standard commit workflow
+- amend.md — Amend a recent commit
+- stage-review.md — Review what's staged before committing
+
+# KNOWLEDGE
+
+## PATTERNS
+- Format: type(scope): description
+- Types: feat, fix, refactor, docs, test, chore, ci, perf
+- Use HEREDOC for multi-line commit messages
+- Include Co-Authored-By when pair programming
+
+## CONVENTIONS
+- One logical change per commit
+- Present tense imperative mood ("Add feature" not "Added")
+- Never commit secrets or .env files
+- Prefer staging specific files over `git add -A`
+- Always create NEW commits after hook failures (never amend)
+
+# RULES
+
+NEVER_DO:
+  - Commit files containing secrets
+  - Amend without explicit user request
+  - Skip pre-commit hooks (--no-verify)
+  - Force push to main/master
+  - Use git add -A without reviewing files
+
+ALWAYS_DO:
+  - Run git status before committing
+  - Check git log for commit message style
+  - Stage files by name, not with wildcards
+  - Verify success with git status after commit</code></pre>
+  </div>
+
+  <h4>Step 3: FORMAT.md — Output Specification</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/skills/my-skill/FORMAT.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-markdown"># Output Format
+
+## SECTION summary
+FORMAT: prose
+REQUIRED: true
+> 2-3 sentence overview of what was done
+
+## SECTION files
+FORMAT: table
+COLUMNS: File | Action | Description
+REQUIRED: true
+
+## SECTION quality_checklist
+FORMAT: checklist
+REQUIRED: true
+- [ ] Tests pass
+- [ ] No lint errors
+- [ ] Security check passed
+
+## SECTION issues
+FORMAT: list
+REQUIRED: false (only if issues found)
+> Each issue: severity, location, description, fix</code></pre>
+  </div>
+
+  <h4>Step 4: VOICE.md — Communication Style</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/skills/my-skill/VOICE.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-markdown"># Voice
+
+## TONE
+- Direct, technical, no hedging
+- Lead with action, not explanation
+- Confidence without arrogance
+
+## REPORTING
+- Summary first, details on demand
+- Use tables for structured data
+- Bullet points for lists of findings
+
+## TAGS
+Inline issue markers for categorization:
+- [BUILD] — Build or compilation issues
+- [SECURITY] — Security vulnerabilities
+- [PERF] — Performance concerns
+- [TEST] — Test coverage gaps
+
+## TERMINOLOGY
+PREFER: "returns" over "gives back"
+PREFER: "handles" over "takes care of"
+PREFER: "validates" over "checks if valid"
+AVOID: "simply", "just", "obviously"</code></pre>
+  </div>
+
+  <h4>Step 5: Progressive Disclosure</h4>
+  <p>Skills use three disclosure tiers to minimize context usage:</p>
+  <table>
+    <thead><tr><th>Tier</th><th>When Loaded</th><th>Size</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Metadata</strong> (frontmatter)</td><td>Always — used for skill matching</td><td>~100 words</td></tr>
+      <tr><td><strong>SKILL.md body</strong></td><td>When skill is triggered</td><td>&lt;5,000 words</td></tr>
+      <tr><td><strong>references/, workflows/</strong></td><td>On-demand when needed</td><td>Unlimited</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 6: Skills vs CLAUDE.md Rules</h4>
+  <table>
+    <thead><tr><th>Aspect</th><th>CLAUDE.md Rules</th><th>Skills</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Loading</strong></td><td>Always active</td><td>Loaded on demand</td></tr>
+      <tr><td><strong>Scope</strong></td><td>Universal constraints</td><td>Domain-specific expertise</td></tr>
+      <tr><td><strong>Size</strong></td><td>Short (under 50 lines)</td><td>Rich (multi-file packages)</td></tr>
+      <tr><td><strong>Example</strong></td><td>"Never hardcode secrets"</td><td>"How to implement Django middleware"</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Create a minimal skill at <code>.claude/skills/my-first-skill/SKILL.md</code> with frontmatter (name, description) and a KNOWLEDGE section documenting one pattern from your project. Add a FORMAT.md with at least a summary section.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>Start with a pattern you repeat often. For example, if your project has a specific error handling pattern, document it in the KNOWLEDGE section with a code example. The description should mention when this skill activates.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Skills are multi-file knowledge packages in <code>.claude/skills/*/</code></li>
+    <li>Full anatomy: SKILL.md + FORMAT.md + VOICE.md + workflows/ + references/</li>
+    <li>Progressive disclosure: metadata always, body when triggered, resources on-demand</li>
+    <li>Skills are contextual (on-demand), rules are universal (always-on)</li>
+    <li>Start with workflows, then derive knowledge — not the other way around</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(5)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(6)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(7)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 7 ============ -->
+<section id="tutorial-7" class="tutorial" data-difficulty="intermediate" data-time="35">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 07</span>
+  <h2>Hooks — Event-Driven Automation</h2>
+  <div class="meta">
+    <span class="time-badge">35 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>How hooks intercept Claude Code tool calls</li>
+    <li>Hook lifecycle: PreToolUse, PostToolUse, SessionStart, Stop</li>
+    <li>Real examples: blocking --no-verify, auto-formatting, quality gates</li>
+    <li>How to configure hooks in settings.json</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Hooks are the <strong>immune system</strong> of your development workflow. They fire automatically before or after Claude uses a tool, catching mistakes in real-time. A PreToolUse hook can <em>block</em> a dangerous action. A PostToolUse hook can auto-format code the instant it's written.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Hook Architecture</h4>
+  <p>Every hook has three parts:</p>
+  <ul>
+    <li><strong>Matcher</strong> — Which tool(s) trigger it (<code>Bash</code>, <code>Edit</code>, <code>Write</code>, <code>*</code> for all)</li>
+    <li><strong>Command</strong> — The script to run when triggered</li>
+    <li><strong>Exit Code</strong> — 0 = pass/warn, 2 = block the action</li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/settings.json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-json">{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "echo '$TOOL_INPUT' | grep -q '\\-\\-no-verify' && echo 'BLOCKED: --no-verify is not allowed' && exit 2 || exit 0"
+        }],
+        "description": "Block git hook-bypass flag"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{
+          "type": "command",
+          "command": "npx prettier --write \"$TOOL_INPUT_FILE_PATH\" 2>/dev/null || true"
+        }],
+        "description": "Auto-format after file edits"
+      }
+    ]
+  }
+}</code></pre>
+  </div>
+
+  <h4>Step 2: Blocking Dangerous Actions</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">How blocking works</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">Claude tries: git commit --no-verify -m "quick fix"
+                          |
+PreToolUse hook fires for "Bash" tool
+                          |
+Hook detects "--no-verify" in command
+                          |
+Exit code 2 -> ACTION BLOCKED
+                          |
+Claude is forced to commit properly with hooks enabled</code></pre>
+  </div>
+
+  <h4>Step 3: The Complete Hook Lifecycle</h4>
+  <table>
+    <thead><tr><th>Event</th><th>When</th><th>Example Hooks</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SessionStart</strong></td><td>Session begins</td><td>Load context, detect package manager</td></tr>
+      <tr><td><strong>PreToolUse</strong></td><td>Before any tool</td><td>Block --no-verify, prevent rm -rf</td></tr>
+      <tr><td><strong>PostToolUse</strong></td><td>After tool succeeds</td><td>Auto-format, lint check, type check</td></tr>
+      <tr><td><strong>PreCompact</strong></td><td>Before context compaction</td><td>Save state before memory is compressed</td></tr>
+      <tr><td><strong>Stop</strong></td><td>Session ends</td><td>Cleanup temp files, session summary</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 4: Practical Hook Examples</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Common Hook Patterns</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-json">{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{"type": "command", "command": "echo '$TOOL_INPUT' | grep -qE '(rm -rf|--force|--hard)' && echo 'BLOCKED: Destructive command detected' && exit 2 || exit 0"}],
+        "description": "Block destructive shell commands"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [{"type": "command", "command": "grep -rn 'TODO\\|FIXME\\|HACK' \"$TOOL_INPUT_FILE_PATH\" && echo 'Warning: TODOs found in written file' || true"}],
+        "description": "Warn about TODO markers in new files"
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [{"type": "command", "command": "echo 'Session ended at $(date)' >> .claude/session.log"}],
+        "description": "Log session end time"
+      }
+    ]
+  }
+}</code></pre>
+  </div>
+
+  <div class="callout cross-tool">
+    <strong>Cursor Equivalent:</strong> Cursor uses <code>.cursor/hooks.json</code> with similar events: <code>beforeShellExecution</code>, <code>afterFileEdit</code>. Same concept, different event names.
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Add a PreToolUse hook to your <code>.claude/settings.json</code> that blocks any Bash command containing <code>--no-verify</code>. Test it by asking Claude to commit with that flag.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>The hook command should check the tool input for the forbidden flag and exit with code 2 to block it. Exit code 0 allows the action to proceed.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Hooks = event-driven automation: matcher + command + exit code</li>
+    <li>Exit code 2 blocks actions, exit code 0 warns/passes</li>
+    <li>PreToolUse prevents bad actions, PostToolUse ensures quality</li>
+    <li>Five lifecycle events: SessionStart, PreToolUse, PostToolUse, PreCompact, Stop</li>
+    <li>Same concept exists in Cursor with slightly different event names</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(6)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(7)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(8)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 8 ============ -->
+<section id="tutorial-8" class="tutorial" data-difficulty="intermediate" data-time="25">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 08</span>
+  <h2>MCP Servers — External Integrations</h2>
+  <div class="meta">
+    <span class="time-badge">25 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>What MCP (Model Context Protocol) is and why it matters</li>
+    <li>How to configure MCP servers for GitHub, databases, and web search</li>
+    <li>MCP configuration in <code>.claude/mcp.json</code></li>
+    <li>How MCP works across Claude Code, Codex, and Cursor</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>MCP extends Claude Code's capabilities beyond file editing. Want Claude to create GitHub PRs? Query a database? Search the web? MCP servers provide these integrations through a standardized protocol.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: MCP Server Configuration</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/mcp.json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-json">{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT_HERE"
+      },
+      "description": "GitHub operations - PRs, issues, repos"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "description": "Live documentation lookup"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "description": "Chain-of-thought reasoning"
+    }
+  }
+}</code></pre>
+  </div>
+
+  <h4>Step 2: Common MCP Server Categories</h4>
+  <table>
+    <thead><tr><th>Category</th><th>Servers</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Source Control</strong></td><td>github</td><td>PRs, issues, repo operations</td></tr>
+      <tr><td><strong>Database</strong></td><td>supabase, postgres</td><td>Database queries and operations</td></tr>
+      <tr><td><strong>Deployment</strong></td><td>vercel, cloudflare</td><td>Deploy and manage infrastructure</td></tr>
+      <tr><td><strong>Research</strong></td><td>exa-web-search, context7</td><td>Web search, live docs</td></tr>
+      <tr><td><strong>AI Utilities</strong></td><td>sequential-thinking, memory</td><td>Enhanced reasoning, persistence</td></tr>
+      <tr><td><strong>Testing</strong></td><td>playwright</td><td>Browser automation for E2E</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 3: Setting Up GitHub MCP</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># 1. Create a GitHub PAT at github.com/settings/tokens
+#    Required scopes: repo, read:org
+
+# 2. Set it as an environment variable
+export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxx
+
+# 3. Now Claude Code can:
+#    - Create PRs and issues
+#    - Read and comment on PRs
+#    - Search repositories
+#    - Manage branches</code></pre>
+  </div>
+
+  <div class="callout cross-tool">
+    <strong>Cross-Tool Portability:</strong> MCP servers are the most portable component. The same <code>@modelcontextprotocol/server-github</code> package works in Claude Code, Codex CLI, and Cursor. Configure once, use everywhere.
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Set up the <code>context7</code> MCP server (no API key needed) and try asking Claude to look up documentation for a library you use. Compare the output with and without MCP.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>After configuring context7, try: "Use context7 to look up the latest Next.js App Router documentation." The MCP server fetches live docs instead of relying on Claude's training data.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>MCP extends Claude Code with external integrations via standardized protocol</li>
+    <li>Configure in <code>.claude/mcp.json</code> with server command, args, and env</li>
+    <li>Same MCP server packages work across Claude Code, Codex, and Cursor</li>
+    <li>Set API keys as environment variables, never hardcode them</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(7)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(8)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(9)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 9 ============ -->
+<section id="tutorial-9" class="tutorial" data-difficulty="intermediate" data-time="30">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 09</span>
+  <h2>Building Agents — Templates &amp; Best Practices</h2>
+  <div class="meta">
+    <span class="time-badge">30 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>The complete agent template with all sections</li>
+    <li>MODE detection: how agents decide what to do</li>
+    <li>KNOWLEDGE, MEMORY, and RULES sections</li>
+    <li>Architecture checklist for production agents</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Tutorial 4 covered the basics of agents. Now we go deeper — building production-quality agents with mode detection, knowledge sections, persistent memory, and comprehensive rules. This is where agents go from simple helpers to autonomous specialists.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Full Agent Template</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Agent Template (complete structure)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+name: my-agent
+description: |
+  One-line role summary. Use PROACTIVELY when [conditions].
+
+  Examples:
+  - "Example user prompt 1"
+  - "Example user prompt 2"
+  - "Example user prompt 3"
+model: sonnet
+color: blue
+skills:
+  - my-skill
+memory:
+  path: .claude/agent-memory/my-agent/MEMORY.md
+  auto_load: true
+  max_lines: 200
+---
+
+# IDENTITY
+You are [role] for [project]. You [primary responsibility].
+
+# Task Tracking (Mandatory)
+
+At the start of every task, decompose your work into steps
+using TaskCreate. Mark each step `in_progress` before
+starting, `completed` after finishing.
+
+```
+# 1. Create all tasks BEFORE starting work
+task1 = TaskCreate(
+    subject="Phase 1: Read skill and understand request",
+    activeForm="Reading skill and understanding request")
+task2 = TaskCreate(
+    subject="Phase 2: Analyze codebase",
+    activeForm="Analyzing codebase")
+task3 = TaskCreate(
+    subject="Phase 3: Execute the work",
+    activeForm="Executing the work")
+task4 = TaskCreate(
+    subject="Phase 4: Verify and report",
+    activeForm="Verifying and reporting results")
+
+# 2. Set up sequential dependencies
+TaskUpdate(taskId=task2, addBlockedBy=[task1])
+TaskUpdate(taskId=task3, addBlockedBy=[task2])
+TaskUpdate(taskId=task4, addBlockedBy=[task3])
+
+# 3. Execute with lifecycle tracking
+TaskUpdate(taskId=task1, status="in_progress")
+# ... do the work ...
+TaskUpdate(taskId=task1, status="completed")
+```
+
+# DETECT mode FROM input
+- IF input mentions "fix", "bug", "error" -> mode = fix
+- IF input mentions "add", "create", "implement" -> mode = feature
+- ELSE -> mode = default
+
+# MODE default
+TRIGGER: General requests
+TASKS:
+  1. Read the skill for domain knowledge
+  2. Analyze the request
+  3. Execute the work
+  4. Report results
+
+# MODE fix
+TRIGGER: Bug reports and error fixing
+TASKS:
+  1. Reproduce the issue
+  2. Identify root cause
+  3. Implement fix
+  4. Verify with tests
+
+# KNOWLEDGE
+
+## PATTERNS
+- [Pattern 1 from your domain]
+- [Pattern 2 from your domain]
+
+## CONVENTIONS
+- [Convention 1]
+- [Convention 2]
+
+# MEMORY
+PATH: .claude/agent-memory/my-agent/MEMORY.md
+AUTO_LOAD: true
+ORGANIZE: by topic, not chronologically
+UPDATE: after completing significant tasks
+
+# RULES
+
+ALWAYS_DO:
+  - Decompose work into tasks with TaskCreate BEFORE starting
+  - Mark each task in_progress/completed as you go
+  - Set up dependencies with addBlockedBy
+  - Read skill files before starting work
+  - Detect mode from user input
+  - Report results clearly
+
+NEVER_DO:
+  - Start work without creating tasks first
+  - Skip task lifecycle tracking
+  - Operate without reading the skill first
+  - Modify files outside your scope
+  - Make assumptions without reading code</code></pre>
+  </div>
+
+  <h4>Step 2: Mode Detection</h4>
+  <p>Agents should detect their operating mode from the user's input:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Mode Detection Example</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text"># DETECT mode FROM input
+
+- IF input mentions "review", "check", "audit"
+  -> mode = review
+  -> WORKFLOW: Read files, analyze, report findings
+
+- IF input mentions "fix", "bug", "broken", "error"
+  -> mode = fix
+  -> WORKFLOW: Reproduce, diagnose, fix, verify
+
+- IF input mentions "add", "create", "implement", "build"
+  -> mode = feature
+  -> WORKFLOW: Plan, implement, test, report
+
+- IF input mentions "refactor", "improve", "clean up"
+  -> mode = refactor
+  -> WORKFLOW: Analyze, propose changes, implement, verify
+
+- ELSE -> mode = default
+  -> WORKFLOW: Analyze request, execute, report</code></pre>
+  </div>
+  <p>Each MODE has its own TRIGGER, WORKFLOW, and TASKS — preventing the agent from using a one-size-fits-all approach.</p>
+
+  <h4>Step 3: Architecture Checklist</h4>
+  <p>Before shipping an agent, verify these requirements:</p>
+  <table>
+    <thead><tr><th>Check</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Name</strong></td><td>Kebab-case, unique across project</td></tr>
+      <tr><td><strong>Description</strong></td><td>50-500 chars, includes 2-4 example triggers</td></tr>
+      <tr><td><strong>Model</strong></td><td>Explicitly set (opus/sonnet/haiku)</td></tr>
+      <tr><td><strong>Body</strong></td><td>Has IDENTITY section, 500-3000 chars total</td></tr>
+      <tr><td><strong>ALWAYS/NEVER</strong></td><td>Both sections present with concrete rules</td></tr>
+      <tr><td><strong>Skill binding</strong></td><td>References at least one skill</td></tr>
+      <tr><td><strong>Tool scoping</strong></td><td>Minimal permissions for the role</td></tr>
+      <tr><td><strong>Error handling</strong></td><td>Handles: empty input, missing files, tool failures</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 4: Complete Agent Anti-Pattern Reference</h4>
+  <div class="callout warn">
+    <strong>22 Agent Anti-Patterns to Avoid:</strong>
+    <ul>
+      <li><strong>God Agent</strong> — Does everything. Decompose into focused specialists.</li>
+      <li><strong>Orphan Agent</strong> — No pipeline uses it. Integrate or deprecate.</li>
+      <li><strong>Skillless Agent</strong> — No skill binding. Add at least one skill.</li>
+      <li><strong>Mode-Blind Tasks</strong> — Same tasks regardless of input. Add MODE detection.</li>
+      <li><strong>Vague Identity</strong> — "A helpful assistant." Rewrite with role, scope, relationships.</li>
+      <li><strong>Copy-Paste Agent</strong> — Duplicated from another. Extract shared knowledge into a skill.</li>
+      <li><strong>Missing Delegation</strong> — Does everything inline. Delegate complex steps to sub-agents.</li>
+      <li><strong>No Examples</strong> — Description has no example triggers. Add 2-4 concrete examples.</li>
+      <li><strong>Stale Agent</strong> — Template has evolved but agent hasn't. Refresh against template.</li>
+      <li><strong>TODO in Production</strong> — Placeholder sections remain. Fill or remove all TODOs.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Build a complete <code>test-runner</code> agent with: 3 modes (unit, integration, coverage), skill binding, ALWAYS/NEVER rules, and a KNOWLEDGE section with your project's testing patterns. Verify it against the architecture checklist.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>The test-runner's modes should be: <code>unit</code> (triggered by "run unit tests"), <code>integration</code> (triggered by "integration test" or "e2e"), and <code>coverage</code> (triggered by "coverage report"). Each mode runs different test commands.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Production agents have: IDENTITY, DETECT, MODEs, KNOWLEDGE, MEMORY, RULES</li>
+    <li>Mode detection routes different inputs to different workflows</li>
+    <li>Every agent should bind to at least one skill for domain knowledge</li>
+    <li>Use the architecture checklist before shipping any agent</li>
+    <li>Avoid the 10 common anti-patterns: god agent, skillless, mode-blind, etc.</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(8)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(9)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(10)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 10 ============ -->
+<section id="tutorial-10" class="tutorial" data-difficulty="intermediate" data-time="30">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 10</span>
+  <h2>Building Skills — The 6-Step Methodology</h2>
+  <div class="meta">
+    <span class="time-badge">30 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>The 6-step skill creation methodology</li>
+    <li>Workflow-first design: derive knowledge from actual tasks</li>
+    <li>Writing effective workflows, references, and scripts</li>
+    <li>Skill anti-patterns and quality checks</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Tutorial 6 covered skill anatomy. Now we build one from scratch using the proven 6-step methodology. The key insight: <strong>start with workflows (day-to-day tasks), then derive knowledge</strong> — not the other way around.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Understand — Get Concrete Examples</h4>
+  <p>Before writing anything, gather 3-5 concrete examples of the task this skill handles. Avoid abstract descriptions.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Good vs Bad Starting Points</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">BAD:  "A skill for API development"
+GOOD: "When I add a new endpoint, I always:
+       1. Create the route handler
+       2. Add input validation with Zod
+       3. Write integration tests
+       4. Update the OpenAPI spec
+       5. Add rate limiting middleware"</code></pre>
+  </div>
+
+  <h4>Step 2: Plan Reusables</h4>
+  <p>Identify what can be extracted into scripts, references, and templates:</p>
+  <ul>
+    <li><strong>Scripts</strong> — Deterministic bash operations (scaffold files, run checks)</li>
+    <li><strong>References</strong> — Documentation loaded on-demand (API specs, conventions)</li>
+    <li><strong>Workflows</strong> — Step-by-step playbooks per task type</li>
+  </ul>
+
+  <h4>Step 3: Create the Folder Structure</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Create the skill structure
+mkdir -p .claude/skills/api-development/{workflows,references,scripts}
+touch .claude/skills/api-development/{SKILL.md,FORMAT.md,VOICE.md,DRY_RUN.md}
+touch .claude/skills/api-development/workflows/{feature.md,bugfix.md,review.md}
+touch .claude/skills/api-development/references/conventions.md</code></pre>
+  </div>
+
+  <h4>Step 4: Write Workflows First</h4>
+  <p>Workflows are the <strong>source of truth</strong>. Each workflow is a concrete playbook:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/skills/api-development/workflows/feature.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-markdown"># Add New API Endpoint — Workflow
+
+## IDENTITY
+Playbook for adding a new API endpoint to the project.
+
+## GUARD (prerequisites)
+- [ ] Route path is defined (e.g., /api/v1/users)
+- [ ] HTTP method is decided (GET, POST, PUT, DELETE)
+- [ ] Request/response schema is clear
+ON_FAIL: Ask the user to clarify before proceeding
+
+## FLOW
+1. Create route handler in `src/routes/`
+   WITH: route path, HTTP method
+   PRODUCING: handler file with input validation
+
+2. Add Zod schema for request validation
+   WITH: request body/query schema
+   PRODUCING: schema file in `src/schemas/`
+
+3. Write integration tests
+   WITH: happy path + 3 error cases
+   PRODUCING: test file with 4+ test cases
+
+4. Update OpenAPI spec
+   WITH: endpoint definition
+   PRODUCING: updated openapi.yaml
+
+5. Add rate limiting middleware
+   WITH: default 100 req/min
+   PRODUCING: middleware chain
+
+## CHECKLIST (verification)
+- [ ] Handler returns correct status codes
+- [ ] Input validation rejects invalid data
+- [ ] Tests cover happy path and error cases
+- [ ] OpenAPI spec matches implementation
+- [ ] Rate limiting is configured</code></pre>
+  </div>
+
+  <h4>Step 5: Derive SKILL.md from Workflows</h4>
+  <p>Now write the SKILL.md by extracting patterns from your workflows:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/skills/api-development/SKILL.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+name: api-development
+description: |
+  API endpoint development patterns. Use when creating new
+  endpoints, fixing API bugs, or reviewing API code.
+---
+
+# IDENTITY
+You follow this project's API development conventions.
+
+# WORKFLOWS MAP (source of truth)
+- feature.md — Add a new endpoint
+- bugfix.md — Fix an API bug
+- review.md — Review API changes
+
+# KNOWLEDGE (derived from workflows)
+
+## PATTERNS
+- All endpoints use Zod for input validation
+- Response format: { success, data?, error? }
+- Rate limiting: 100 req/min default, configurable per route
+- OpenAPI spec must match implementation
+
+## CONVENTIONS
+- Route handlers in src/routes/
+- Schemas in src/schemas/
+- Tests alongside code (*.test.ts)
+- Always return proper HTTP status codes
+
+## STRATEGY
+CAPTURE: New patterns discovered during reviews
+UPDATE_FREE: Add new patterns to reference docs
+UPDATE_APPROVAL: Changes to validation or response format</code></pre>
+  </div>
+
+  <h4>Step 6: Skill Anti-Patterns</h4>
+  <div class="callout warn">
+    <strong>Skill Anti-Patterns:</strong>
+    <ul>
+      <li><strong>Thin Skill</strong> — Only a SKILL.md with no workflows or references. Use the full folder structure.</li>
+      <li><strong>Abstract Patterns</strong> — Knowledge not derived from actual workflows. Delete unused patterns.</li>
+      <li><strong>Empty References</strong> — Reference folder exists but files are empty. Seed with real docs.</li>
+      <li><strong>Placeholder Workflows</strong> — "TODO: add steps." Rewrite with concrete actions.</li>
+      <li><strong>Bloated SKILL.md</strong> — Over 5,000 words. Move details to references/.</li>
+      <li><strong>Dead References</strong> — Reference files that no workflow ever loads. Remove them.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Build a complete skill for a workflow you repeat often (e.g., database migrations, component creation, deployment). Follow all 6 steps: understand, plan, create folders, write workflows, derive SKILL.md, iterate.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>Start with the workflow. Write out the exact steps you take manually, then formalize them into a FLOW with GUARDs and CHECKLISTs. The SKILL.md patterns should come directly from what you wrote in the workflows.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>6 steps: Understand, Plan reusables, Create structure, Write workflows, Derive SKILL.md, Iterate</li>
+    <li>Workflows are the source of truth — derive knowledge from tasks, not vice versa</li>
+    <li>Each workflow has: GUARD (prerequisites), FLOW (steps), CHECKLIST (verification)</li>
+    <li>Avoid thin skills, abstract patterns, and bloated SKILL.md files</li>
+    <li>Progressive disclosure: SKILL.md summarizes, workflows/ and references/ provide depth</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(9)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(10)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(11)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 11 ============ -->
+<section id="tutorial-11" class="tutorial" data-difficulty="intermediate" data-time="30">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 11</span>
+  <h2>Security &amp; Code Review</h2>
+  <div class="meta">
+    <span class="time-badge">30 min</span>
+    <span class="diff-badge intermediate">Intermediate</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>Setting up automated security review with agents</li>
+    <li>OWASP Top 10 detection patterns</li>
+    <li>Confidence-based filtering to reduce noise</li>
+    <li>Critical security patterns to catch immediately</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Code review shouldn't be optional — it should be automated. By creating a <code>code-reviewer</code> agent and a <code>/review</code> command, you can run security and quality checks on every change. The agent hunts for vulnerabilities while the command orchestrates the workflow.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Security Review Checklist</h4>
+  <p>Your security reviewer agent should check the OWASP Top 10:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Security Review Patterns</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-markdown">## OWASP Top 10 Check
+1. **Injection** — Queries parameterized? Input sanitized?
+2. **Broken Auth** — Passwords hashed (bcrypt/argon2)?
+3. **Sensitive Data** — HTTPS enforced? Secrets in env vars?
+4. **XXE** — XML parsers configured securely?
+5. **Broken Access** — Auth checked on every route?
+6. **Misconfiguration** — Debug mode off in prod?
+7. **XSS** — Output escaped? CSP set?
+8. **Insecure Deserialization** — Safe deserialization?
+9. **Known Vulnerabilities** — Dependencies up to date?
+10. **Insufficient Logging** — Security events logged?</code></pre>
+  </div>
+
+  <h4>Step 2: Critical Code Patterns</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Patterns That Must Be Flagged</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-typescript">// CRITICAL: SQL injection via string concatenation
+const query = `SELECT * FROM users WHERE id = ${userId}`;
+// FIX: Use parameterized queries
+const query = `SELECT * FROM users WHERE id = $1`;
+const result = await db.query(query, [userId]);
+
+// CRITICAL: Hardcoded secrets
+const API_KEY = "sk-abc123...";
+// FIX: Use environment variables
+const API_KEY = process.env.API_KEY;
+
+// HIGH: XSS via innerHTML
+element.innerHTML = userInput;
+// FIX: Use textContent or DOMPurify
+element.textContent = userInput;
+
+// CRITICAL: No auth check on route
+app.post('/admin/delete-user', deleteUser);
+// FIX: Add authentication middleware
+app.post('/admin/delete-user', requireAuth, requireAdmin, deleteUser);</code></pre>
+  </div>
+
+  <h4>Step 3: Confidence-Based Filtering</h4>
+  <p>Reduce noise by only reporting findings above a confidence threshold:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Reviewer Rules</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-markdown">## Confidence-Based Filtering
+
+**Report** if &gt;80% confident it is a real issue
+**Skip** stylistic preferences unless they violate project conventions
+**Skip** issues in unchanged code unless CRITICAL security issues
+**Consolidate** similar issues ("5 functions missing error handling")
+**Prioritize** issues that could cause bugs, security vulns, or data loss</code></pre>
+  </div>
+
+  <h4>Step 4: Review Severity Levels</h4>
+  <table>
+    <thead><tr><th>Severity</th><th>Action</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td><strong>CRITICAL</strong></td><td>Block commit, fix immediately</td><td>SQL injection, hardcoded secrets, XSS</td></tr>
+      <tr><td><strong>HIGH</strong></td><td>Fix before merge</td><td>Missing auth, large functions, no error handling</td></tr>
+      <tr><td><strong>MEDIUM</strong></td><td>Address in next iteration</td><td>Missing tests, mutation patterns</td></tr>
+      <tr><td><strong>LOW</strong></td><td>Track for later</td><td>Style suggestions, minor improvements</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Create a <code>.claude/agents/security-reviewer.md</code> with read-only tools, the OWASP Top 10 checklist in its KNOWLEDGE section, and confidence-based filtering rules. Test it by intentionally introducing a SQL injection vulnerability.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>Give the security reviewer only Read/Grep/Glob tools — it should report, not fix. The agent should flag SQL injection as CRITICAL with a suggested parameterized query fix.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Automate security review with a dedicated agent and /review command</li>
+    <li>Check all OWASP Top 10 categories systematically</li>
+    <li>Use confidence-based filtering (>80%) to reduce noise</li>
+    <li>CRITICAL issues block commits, HIGH issues need attention before merge</li>
+    <li>Six patterns to memorize: SQL injection, hardcoded secrets, XSS, no auth, plaintext passwords, shell injection</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(10)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(11)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(12)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 12 ============ -->
+<section id="tutorial-12" class="tutorial" data-difficulty="advanced" data-time="35">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 12</span>
+  <h2>Orchestration — Multi-Agent Pipelines</h2>
+  <div class="meta">
+    <span class="time-badge">35 min</span>
+    <span class="diff-badge advanced">Advanced</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>How to chain agents into multi-phase pipelines</li>
+    <li>Pipeline YAML definitions with phases and gates</li>
+    <li>Context contracts between pipeline phases</li>
+    <li>The orchestrator command pattern (dispatcher + workers)</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>Individual agents handle one task well. But real features require a <strong>pipeline</strong> — planning, then architecture, then implementation, then testing, then review. Multi-agent orchestration chains these specialists into a repeatable process with quality gates between each phase.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: Pipeline YAML Definition</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">.claude/workflows/my-pipeline.yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">name: feature-pipeline
+description: Full feature development pipeline
+
+phases:
+  - name: requirements
+    agent: pm-agent
+    mode: feature
+    description: Write requirements and acceptance criteria
+    input: user_request
+    output: prd_document
+    validation:
+      - PRD document exists
+      - Acceptance criteria defined
+
+  - name: architecture
+    agent: architect-agent
+    mode: design
+    description: Design package structure and interfaces
+    input: prd_document
+    output: architecture_design
+    depends_on: [requirements]
+    validation:
+      - Interfaces defined
+      - No circular dependencies
+
+  - name: implementation
+    agent: dev-agent
+    mode: feature
+    description: Implement the feature
+    input: architecture_design
+    output: implementation_result
+    depends_on: [architecture]
+    validation:
+      - Code compiles
+      - Tests pass
+
+  - name: review
+    agent: reviewer-agent
+    mode: review
+    description: Review for quality and security
+    input: implementation_result
+    output: review_report
+    depends_on: [implementation]
+    validation:
+      - No CRITICAL issues
+      - No HIGH security findings
+
+error_handling:
+  on_phase_failure: stop_pipeline
+  on_validation_failure: retry_phase_once
+
+context_contracts:
+  requirements_to_architecture:
+    detail_level: full
+    max_lines: 500
+  architecture_to_implementation:
+    detail_level: sections
+    max_lines: 300
+  implementation_to_review:
+    detail_level: file_manifest
+    max_lines: 200</code></pre>
+  </div>
+
+  <h4>Step 2: Context Contracts</h4>
+  <p>Control how much context passes between phases to avoid the "Context Snowball" anti-pattern:</p>
+  <table>
+    <thead><tr><th>Detail Level</th><th>What's Passed</th><th>Use When</th></tr></thead>
+    <tbody>
+      <tr><td><code>full</code></td><td>Complete output</td><td>Next phase needs everything (rare)</td></tr>
+      <tr><td><code>summary</code></td><td>Key findings only</td><td>Overview is sufficient</td></tr>
+      <tr><td><code>sections</code></td><td>Specific named sections</td><td>Only certain parts needed</td></tr>
+      <tr><td><code>file_manifest</code></td><td>List of files changed</td><td>Reviewer just needs file list</td></tr>
+      <tr><td><code>omit</code></td><td>Nothing</td><td>Phase is independent</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 3: The Orchestrator Command</h4>
+  <p>The orchestrator command reads the pipeline YAML and dispatches agents:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Orchestrator Pattern</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">Orchestrator Command (main thread)
+       |
+       +---> Phase 1: PM Agent -> PRD document
+       |         (validation gate)
+       +---> Phase 2: Architect Agent -> Design
+       |         (validation gate)
+       +---> Phase 3: Dev Agent -> Implementation
+       |         (validation gate)
+       +---> Phase 4: Reviewer Agent -> Report
+       |
+       Done: Summary of all phases</code></pre>
+  </div>
+
+  <h4>Step 4: Pipeline Design Rules</h4>
+  <ul>
+    <li><strong>PM agent is always Phase 0</strong> — Requirements before everything</li>
+    <li><strong>Star topology</strong> — Only the orchestrator dispatches workers. Workers never talk to each other.</li>
+    <li><strong>Anti-do-it-yourself</strong> — The orchestrator NEVER does workers' jobs. It dispatches and collects.</li>
+    <li><strong>Context contracts</strong> — Every phase-to-phase handoff has explicit max_lines and detail_level.</li>
+    <li><strong>Validation gates</strong> — Each phase must pass validation before the next starts.</li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>Pipeline Anti-Patterns:</strong>
+    <ul>
+      <li><strong>Context Snowball</strong> — Later phases get ALL upstream output. Use context contracts with max_lines.</li>
+      <li><strong>Self-Doing Dispatcher</strong> — Orchestrator does workers' jobs instead of delegating.</li>
+      <li><strong>Missing PM</strong> — No requirements phase. Always start with a PM agent.</li>
+      <li><strong>Blind Handoff</strong> — No context schema between phases. Add explicit contracts.</li>
+      <li><strong>Setup as Phase</strong> — One-time scaffolding as a pipeline phase. Make it a standalone command instead.</li>
+    </ul>
+  </div>
+
+  <h4>Step 6: Automate Squad Design with Squad Architect</h4>
+  <p>Designing multi-agent pipelines by hand works for small teams, but gets complex fast. <a href="https://github.com/endorphin-ai/squad-architect">Squad Architect</a> is an open-source CLI tool that automates the design and build of agent squads for Claude Code projects.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Install Squad Architect
+brew install endorphin-ai/tap/squad-architect
+
+# Design a new agent squad interactively
+squad-architect design
+
+# Build the squad — generates agents, skills, commands,
+# pipeline YAML, and orchestrator command
+squad-architect build
+
+# Run the full pipeline
+/el-capitan "Add user authentication to the API"</code></pre>
+  </div>
+  <p>Squad Architect generates everything covered in this tutorial:</p>
+  <ul>
+    <li><strong>Agents</strong> — with skills, model routing, task tracking, ALWAYS/NEVER rules</li>
+    <li><strong>Skills</strong> — full anatomy (SKILL.md, FORMAT.md, VOICE.md, workflows/)</li>
+    <li><strong>Pipeline YAML</strong> — phases, validation gates, context contracts</li>
+    <li><strong>Orchestrator command</strong> — dispatches agents in sequence with star topology</li>
+    <li><strong>CLAUDE.md</strong> — updated with squad documentation</li>
+  </ul>
+
+  <div class="callout tip">
+    <strong>Recommended:</strong> If you're building a squad of 3+ agents with a pipeline, use <a href="https://github.com/endorphin-ai/squad-architect">Squad Architect</a> instead of hand-crafting every file. It follows all the best practices from this course — context contracts, PM-first pipelines, star topology, and anti-pattern avoidance — automatically.
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Try It Yourself</h3>
+  <div class="challenge-card">
+    <p>Design a 3-phase pipeline YAML for your project: (1) Plan, (2) Implement, (3) Review. Define context contracts between each phase with appropriate detail levels and max_lines.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>Plan-to-Implement should use <code>detail_level: full</code> (implementation needs the complete plan). Implement-to-Review should use <code>detail_level: file_manifest</code> (reviewer just needs to know what files changed and can read them directly).</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>Pipelines chain agents into phased workflows with validation gates</li>
+    <li>Context contracts control what passes between phases (prevent context snowball)</li>
+    <li>Star topology: orchestrator dispatches, workers report back, no worker-to-worker</li>
+    <li>PM agent is always Phase 0 — requirements before implementation</li>
+    <li>The orchestrator dispatches; it never does workers' jobs</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(11)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(12)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(13)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 13 ============ -->
+<section id="tutorial-13" class="tutorial" data-difficulty="advanced" data-time="25">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 13</span>
+  <h2>Putting It All Together</h2>
+  <div class="meta">
+    <span class="time-badge">25 min</span>
+    <span class="diff-badge advanced">Advanced</span>
+  </div>
+</div>
+
+<div class="objectives">
+  <h3>What You'll Learn</h3>
+  <ul>
+    <li>How all components work together in a real workflow</li>
+    <li>The complete feature development lifecycle</li>
+    <li>Optimization strategies for daily use</li>
+    <li>Where to go from here</li>
+  </ul>
+</div>
+
+<div class="context">
+  <h3>Context</h3>
+  <p>You've learned all the individual pieces. Now let's see how they combine into a production-grade development workflow — from feature request to deployed, reviewed, tested code.</p>
+</div>
+
+<div class="walkthrough">
+  <h3>Walkthrough</h3>
+
+  <h4>Step 1: The Complete Feature Lifecycle</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">Full Development Workflow</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">SESSION START
+  | SessionStart hook loads context
+  | CLAUDE.md rules loaded
+  | Skills available on demand
+
+1. /plan "Add webhook notifications for order completion"
+   | planner agent (Opus) creates phased plan
+   | Human reviews and confirms
+
+2. /tdd "Implement Phase 1: notification service"
+   | dev agent (Sonnet) scaffolds interfaces
+   | Writes failing tests (RED)
+   | PostToolUse hooks: auto-format
+   | Implements minimal code (GREEN)
+   | Refactors with tests green (REFACTOR)
+
+3. /review
+   | code-reviewer agent checks quality
+   | security-reviewer checks OWASP Top 10
+   | Confidence filtering: only >80% issues reported
+
+4. Human reviews report, addresses findings
+
+5. git commit (with commit skill)
+   | PreToolUse hook blocks --no-verify
+   | Conventional commit format enforced
+   | Co-author tag added
+
+SESSION END
+  | Stop hook: session summary logged</code></pre>
+  </div>
+
+  <h4>Step 2: Daily Optimization Tips</h4>
+  <table>
+    <thead><tr><th>Tip</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Keep CLAUDE.md under 100 lines</td><td>Smaller context = faster, more focused responses</td></tr>
+      <tr><td>Start new sessions after major phase changes</td><td>Fresh context prevents accumulated confusion</td></tr>
+      <tr><td>Compact at milestones, not during debugging</td><td>Compacting mid-debug loses critical context</td></tr>
+      <tr><td>Use /plan for anything that touches >3 files</td><td>Plans prevent false starts and wasted tokens</td></tr>
+      <tr><td>Let hooks catch style issues, review substance</td><td>Don't waste review cycles on formatting</td></tr>
+      <tr><td>One skill per domain, not one giant skill</td><td>Progressive disclosure keeps context lean</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Step 3: The Mental Model</h4>
+  <div class="code-block">
+    <div class="code-header"><span class="file-path">How to Think About Claude Code</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">+----------------------------------------------+
+|              YOUR DEVELOPMENT                |
+|----------------------------------------------|
+|                                              |
+|   CLAUDE.md  -> Project context (always on)  |
+|   Agents     -> Specialist team              |
+|   Commands   -> Workflow triggers             |
+|   Skills     -> Domain expertise (on demand)  |
+|   Hooks      -> Automated guardrails         |
+|   MCP        -> External integrations        |
+|   Pipelines  -> Multi-phase orchestration    |
+|                                              |
++----------------------------------------------+
+
+The human: decides WHAT to build and CONFIRMS plans
+The system: handles HOW with quality, security, tests</code></pre>
+  </div>
+
+  <h4>Step 4: Where to Go Next</h4>
+  <ul>
+    <li><strong>Create custom agents</strong> — Write agents specific to your domain (e.g., a <code>migration-reviewer</code>)</li>
+    <li><strong>Build project-specific skills</strong> — Extract patterns from your codebase into skills</li>
+    <li><strong>Set up hooks</strong> — Start with blocking --no-verify, add formatting and linting</li>
+    <li><strong>Add MCP servers</strong> — Connect your specific tools (GitHub, Sentry, Datadog)</li>
+    <li><strong>Build a pipeline</strong> — Chain your agents into a repeatable development workflow</li>
+    <li><strong>Share with your team</strong> — The <code>.claude/</code> folder is checked into git — everyone benefits</li>
+  </ul>
+
+  <div class="callout tip">
+    <strong>Final Thought:</strong> The goal isn't to automate everything — it's to automate the <em>repeatable parts</em> so you can focus on the <em>creative parts</em>. Claude Code handles formatting, security checks, test scaffolding, and review checklists. You handle architecture, user experience, and business decisions.
+  </div>
+</div>
+
+<div class="challenge">
+  <h3>Final Challenge</h3>
+  <div class="challenge-card">
+    <p>Run the complete workflow on a real feature in your project: <code>/plan</code> &rarr; confirm &rarr; implement &rarr; <code>/review</code>. Note where the system saved you time vs manual development.</p>
+    <details>
+      <summary>Hint</summary>
+      <p>The /plan step saves 15-30 minutes of false starts. Automated review catches 1-2 issues per session that would otherwise reach production. Track these savings to justify the setup time.</p>
+    </details>
+  </div>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li>All components work together: CLAUDE.md constrains, skills inform, agents execute, hooks guard</li>
+    <li>The golden workflow (/plan &rarr; implement &rarr; /review) covers 80% of feature work</li>
+    <li>Optimize by keeping context small, compacting at milestones, and automating guardrails</li>
+    <li>The <code>.claude/</code> folder is checked into git — your whole team benefits</li>
+    <li>These concepts transfer to any AI coding tool — you're learning universal patterns</li>
+  </ul>
+</div>
+
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(12)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(13)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(13)" disabled>Course Complete!</button>
+</div>
+</section>
+
+</div><!-- end .main -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-toml.min.js"></script>
+<script>
+// ---- DATA ----
+const tutorials = [
+  { num: 1, title: "What Is Claude Code?", time: 15, difficulty: "beginner" },
+  { num: 2, title: "Getting Started", time: 20, difficulty: "beginner" },
+  { num: 3, title: "CLAUDE.md — Your Project Brain", time: 25, difficulty: "beginner" },
+  { num: 4, title: "Agents — Your AI Team", time: 30, difficulty: "intermediate" },
+  { num: 5, title: "Commands — Slash Commands", time: 25, difficulty: "intermediate" },
+  { num: 6, title: "Skills — Knowledge Packages", time: 30, difficulty: "intermediate" },
+  { num: 7, title: "Hooks — Event Automation", time: 35, difficulty: "intermediate" },
+  { num: 8, title: "MCP Servers", time: 25, difficulty: "intermediate" },
+  { num: 9, title: "Building Agents", time: 30, difficulty: "intermediate" },
+  { num: 10, title: "Building Skills", time: 30, difficulty: "intermediate" },
+  { num: 11, title: "Security & Code Review", time: 30, difficulty: "intermediate" },
+  { num: 12, title: "Multi-Agent Pipelines", time: 35, difficulty: "advanced" },
+  { num: 13, title: "Putting It All Together", time: 25, difficulty: "advanced" }
+];
+
+// ---- STATE ----
+let currentTutorial = 1;
+let completed = JSON.parse(localStorage.getItem('cc-course-completed') || '[]');
+let theme = localStorage.getItem('cc-course-theme') ||
+  (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+// ---- INIT ----
+function init() {
+  document.body.setAttribute('data-theme', theme);
+  updateThemeIcon();
+  renderNav();
+  navigateTo(1);
+  updateProgress();
+}
+
+// ---- NAVIGATION ----
+function renderNav() {
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = tutorials.map(t => `
+    <a class="nav-item ${t.num === currentTutorial ? 'active' : ''} ${completed.includes(t.num) ? 'completed' : ''}"
+       data-num="${t.num}" onclick="navigateTo(${t.num})">
+      <span class="nav-check">${completed.includes(t.num) ? '&#10003;' : '&#9675;'}</span>
+      <span class="nav-num">${String(t.num).padStart(2, '0')}</span>
+      <span class="nav-title">${t.title}</span>
+      <span class="nav-meta">
+        <span class="nav-time">${t.time}m</span>
+        <span class="diff-dot ${t.difficulty}"></span>
+      </span>
+    </a>
+  `).join('');
+}
+
+function navigateTo(num) {
+  if (num < 1 || num > tutorials.length) return;
+  currentTutorial = num;
+  document.querySelectorAll('.tutorial').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(`tutorial-${num}`);
+  if (target) target.classList.add('active');
+  renderNav();
+  updateCompleteButtons();
+  window.scrollTo(0, 0);
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
+
+// ---- PROGRESS ----
+function markComplete(num) {
+  if (!completed.includes(num)) {
+    completed.push(num);
+    localStorage.setItem('cc-course-completed', JSON.stringify(completed));
+    showConfetti();
+  }
+  updateProgress();
+  renderNav();
+  updateCompleteButtons();
+}
+
+function updateProgress() {
+  const pct = (completed.length / tutorials.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent =
+    `${completed.length} of ${tutorials.length} completed`;
+}
+
+function updateCompleteButtons() {
+  tutorials.forEach(t => {
+    const section = document.getElementById(`tutorial-${t.num}`);
+    if (!section) return;
+    const btn = section.querySelector('.complete-btn');
+    if (btn && completed.includes(t.num)) {
+      btn.textContent = 'Completed!';
+      btn.classList.add('done');
+    }
+  });
+}
+
+function resetProgress() {
+  if (!confirm('Reset all progress? This cannot be undone.')) return;
+  completed = [];
+  localStorage.removeItem('cc-course-completed');
+  updateProgress();
+  renderNav();
+  document.querySelectorAll('.complete-btn').forEach(btn => {
+    btn.textContent = 'Mark Complete \u2713';
+    btn.classList.remove('done');
+  });
+}
+
+// ---- THEME ----
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('cc-course-theme', theme);
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.querySelector('.theme-toggle');
+  btn.textContent = theme === 'dark' ? '\u263E' : '\u2600';
+}
+
+// ---- SIDEBAR ----
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('visible');
+}
+
+// ---- SEARCH ----
+document.addEventListener('DOMContentLoaded', () => {
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    document.querySelectorAll('.nav-item').forEach(item => {
+      const title = item.querySelector('.nav-title').textContent.toLowerCase();
+      item.style.display = title.includes(query) ? 'flex' : 'none';
+    });
+  });
+});
+
+// ---- KEYBOARD SHORTCUTS ----
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft') navigateTo(currentTutorial - 1);
+  if (e.key === 'ArrowRight') navigateTo(currentTutorial + 1);
+  if (e.key === 'Escape') toggleSidebar();
+  if (e.key === '/') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+  }
+});
+
+// ---- COPY CODE ----
+function copyCode(btn) {
+  const block = btn.closest('.code-block');
+  const code = block.querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ---- CONFETTI ----
+function showConfetti() {
+  const colors = ['#7c6aef', '#4ade80', '#facc15', '#60a5fa', '#f87171', '#fb923c'];
+  for (let i = 0; i < 30; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top = Math.random() * 30 + 'vh';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDelay = Math.random() * 0.5 + 's';
+    el.style.width = (4 + Math.random() * 8) + 'px';
+    el.style.height = (4 + Math.random() * 8) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+}
+
+// ---- BOOT ----
+init();
+</script>
+</body>
+</html>
