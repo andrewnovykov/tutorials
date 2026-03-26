@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squad Architect — Build AI Agent Teams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root{--bg-primary:#0f1117;--bg-secondary:#161822;--bg-tertiary:#1c1f2e;--bg-card:#1e2030;--bg-code:#12141f;--text-primary:#e2e4f0;--text-secondary:#a0a4c0;--text-muted:#6b7094;--accent:#7c6aef;--accent-light:#9d8ff5;--accent-glow:rgba(124,106,239,0.15);--green:#4ade80;--green-dim:#22c55e;--yellow:#facc15;--red:#f87171;--orange:#fb923c;--blue:#60a5fa;--border:#2a2d42;--sidebar-width:300px;--topbar-height:56px;--radius:10px;--radius-sm:6px;--transition:0.25s ease}
+[data-theme="light"]{--bg-primary:#f8f9fc;--bg-secondary:#fff;--bg-tertiary:#f0f1f5;--bg-card:#fff;--bg-code:#f5f6fa;--text-primary:#1a1c2e;--text-secondary:#4a4e6a;--text-muted:#8890b5;--accent:#6c5ce7;--accent-light:#7c6aef;--accent-glow:rgba(108,92,231,0.1);--border:#e0e2ee}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden}code,pre,.code-header .file-path{font-family:'JetBrains Mono',monospace}
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-height);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:1000;backdrop-filter:blur(12px)}.topbar .hamburger{display:none;background:none;border:none;color:var(--text-primary);font-size:22px;cursor:pointer;margin-right:12px;padding:4px 8px;border-radius:var(--radius-sm)}.topbar .hamburger:hover{background:var(--bg-tertiary)}.topbar .logo{font-weight:700;font-size:16px;color:var(--accent-light);white-space:nowrap}.topbar .logo span{color:var(--text-secondary);font-weight:400}
+.progress-wrap{flex:1;margin:0 24px;max-width:400px}.progress-label{font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:500}.progress-bar{height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-light));border-radius:3px;transition:width .5s ease;width:0%}
+.topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center}.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;font-size:16px;transition:var(--transition)}.theme-toggle:hover{background:var(--bg-tertiary);color:var(--text-primary)}
+.sidebar{position:fixed;top:var(--topbar-height);left:0;width:var(--sidebar-width);height:calc(100vh - var(--topbar-height));background:var(--bg-secondary);border-right:1px solid var(--border);overflow-y:auto;z-index:900;display:flex;flex-direction:column;transition:transform var(--transition)}.sidebar-search{padding:16px;border-bottom:1px solid var(--border)}.sidebar-search input{width:100%;padding:8px 12px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:var(--transition)}.sidebar-search input::placeholder{color:var(--text-muted)}.sidebar-search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.sidebar-nav{flex:1;padding:8px 0;overflow-y:auto}.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--text-secondary);font-size:13px;transition:var(--transition);text-decoration:none;border-left:3px solid transparent}.nav-item:hover{background:var(--bg-tertiary);color:var(--text-primary)}.nav-item.active{background:var(--accent-glow);color:var(--accent-light);border-left-color:var(--accent);font-weight:600}.nav-item.completed .nav-check{color:var(--green)}.nav-check{font-size:14px;min-width:18px;text-align:center}.nav-num{font-size:11px;font-weight:600;color:var(--text-muted);min-width:22px}.nav-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav-meta{display:flex;gap:6px;align-items:center}.nav-time{font-size:10px;color:var(--text-muted)}.diff-dot{width:8px;height:8px;border-radius:50%}.diff-dot.beginner{background:var(--green)}.diff-dot.intermediate{background:var(--yellow)}.diff-dot.advanced{background:var(--red)}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}.reset-btn{width:100%;padding:8px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:12px;cursor:pointer;transition:var(--transition);font-family:'DM Sans',sans-serif}.reset-btn:hover{border-color:var(--red);color:var(--red)}
+.main{margin-left:var(--sidebar-width);margin-top:var(--topbar-height);min-height:calc(100vh - var(--topbar-height))}.tutorial{display:none;padding:48px 64px;max-width:900px;margin:0 auto;animation:fadeIn .3s ease}.tutorial.active{display:block}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tutorial-header{margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid var(--border)}.tutorial-number{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-glow);padding:4px 10px;border-radius:20px;margin-bottom:12px;letter-spacing:1px}.tutorial-header h2{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:16px}.meta{display:flex;gap:12px;flex-wrap:wrap}.time-badge,.diff-badge{font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500}.time-badge{background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border)}.diff-badge.beginner{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.2)}.diff-badge.intermediate{background:rgba(250,204,21,0.1);color:var(--yellow);border:1px solid rgba(250,204,21,0.2)}.diff-badge.advanced{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.tutorial h3{font-size:22px;font-weight:700;margin:40px 0 16px}.tutorial h4{font-size:17px;font-weight:600;margin:28px 0 12px}.tutorial p{margin-bottom:16px;color:var(--text-secondary);font-size:15px}.tutorial ul,.tutorial ol{margin-bottom:16px;padding-left:24px;color:var(--text-secondary);font-size:15px}.tutorial li{margin-bottom:6px}.tutorial strong{color:var(--text-primary)}.tutorial a{color:var(--accent-light);text-decoration:none}.tutorial a:hover{text-decoration:underline}
+.code-block{margin:16px 0 24px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-code)}.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg-tertiary);border-bottom:1px solid var(--border)}.code-header .file-path{font-size:12px;color:var(--text-muted)}.copy-btn{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:11px;padding:3px 10px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;transition:var(--transition)}.copy-btn:hover{color:var(--text-primary);border-color:var(--accent)}.copy-btn.copied{color:var(--green);border-color:var(--green)}.code-block pre{padding:16px;margin:0;overflow-x:auto;font-size:13px;line-height:1.6}.code-block pre code{background:none!important;padding:0!important}
+.tutorial p code,.tutorial li code,.tutorial td code{background:var(--bg-tertiary);padding:2px 7px;border-radius:4px;font-size:13px;color:var(--accent-light);border:1px solid var(--border)}
+.tutorial table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:14px}.tutorial th{text-align:left;padding:10px 16px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-primary);font-weight:600}.tutorial td{padding:10px 16px;border:1px solid var(--border);color:var(--text-secondary)}
+.challenge-card{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius);padding:20px 24px;margin:12px 0}.challenge-card details{margin-top:12px}.challenge-card summary{cursor:pointer;color:var(--accent-light);font-weight:500;font-size:14px}.challenge-card details p{margin-top:8px;padding-left:16px;border-left:2px solid var(--border)}
+.callout{padding:16px 20px;border-radius:var(--radius);margin:16px 0 24px;font-size:14px;border:1px solid}.callout.info{background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.2);color:var(--blue)}.callout.warn{background:rgba(250,204,21,0.08);border-color:rgba(250,204,21,0.2);color:var(--yellow)}.callout.tip{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.2);color:var(--green)}.callout strong{color:inherit}.callout code{color:inherit;border-color:currentColor;opacity:.8}
+.tutorial-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}.nav-btn{padding:10px 20px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:var(--transition)}.nav-btn:hover{border-color:var(--accent);color:var(--accent-light)}.nav-btn:disabled{opacity:.3;cursor:default}.complete-btn{padding:10px 24px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:var(--transition)}.complete-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--accent-glow)}.complete-btn.done{background:var(--green-dim)}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.topbar .hamburger{display:block}.main{margin-left:0}.tutorial{padding:24px 20px}.tutorial-header h2{font-size:24px}.progress-wrap{display:none}}
+@media print{.topbar,.sidebar,.tutorial-footer,.theme-toggle,.copy-btn{display:none!important}.main{margin-left:0}.tutorial{display:block!important;page-break-after:always;padding:20px}}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:899}.sidebar-overlay.visible{display:block}
+@keyframes confetti-fall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100px) rotate(720deg);opacity:0}}.confetti{position:fixed;pointer-events:none;z-index:9999;width:8px;height:8px;border-radius:2px;animation:confetti-fall 1.5s ease-out forwards}
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">&#9776;</button>
+  <div class="logo">Squad Architect <span>&#183; Build AI Agent Teams</span></div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span id="progress-text">0 of 8 completed</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+  <div class="topbar-actions">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">&#9790;</button>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-search"><input type="text" id="search-input" placeholder="Search tutorials... ( / )"></div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-footer"><button class="reset-btn" onclick="resetProgress()">Reset Progress</button></div>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="main" id="main-content">
+
+<!-- ============ TUTORIAL 1 ============ -->
+<section id="tutorial-1" class="tutorial" data-difficulty="beginner" data-time="10">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 01</span>
+  <h2>What Is Squad Architect?</h2>
+  <div class="meta"><span class="time-badge">10 min</span><span class="diff-badge beginner">Beginner</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li>What Squad Architect does and why it exists</li>
+  <li>The two-phase workflow: Design &rarr; Build</li>
+  <li>What gets generated and how squads run</li>
+</ul></div>
+<div class="context"><h3>Context</h3>
+  <p><a href="https://github.com/endorphin-ai/squad-architect">Squad Architect</a> (by Endorphin AI) is a compiled Go CLI that designs, builds, and manages <strong>multi-agent squads</strong> for Claude Code. Instead of hand-crafting dozens of agent files, skill packages, and pipeline configs, you describe what you need and the CLI generates everything.</p>
+</div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: The Two-Phase Workflow</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Core Workflow</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">squad-architect design    →  Interactive design with Claude
+                              ↓ saves .squad/design.json
+squad-architect build     →  Non-interactive build from design
+                              ↓ creates agents, skills, commands, pipeline
+/el-capitan "task"        →  Squad runs autonomously in Claude Code</code></pre>
+  </div>
+  <h4>Step 2: What Gets Generated</h4>
+  <p>A single <code>design + build</code> cycle creates the entire <code>.claude/</code> ecosystem:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">Generated Structure</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">.claude/
+├── agents/                    # Agent definitions (.md)
+│   ├── pm-rn.md
+│   ├── backend-rn.md
+│   └── ...
+├── agent-memory/              # Persistent memory + passports
+│   ├── pm-rn/
+│   │   ├── MEMORY.md
+│   │   └── PASSPORT.md       # Unique ID (pm-rn-agent-001)
+│   └── ...
+├── skills/                    # Full skill packages
+│   ├── pm-rn/
+│   │   ├── SKILL.md
+│   │   ├── FORMAT.md
+│   │   ├── VOICE.md
+│   │   ├── DRY_RUN.md
+│   │   └── workflows/
+│   └── ...
+├── commands/
+│   ├── el-capitan.md          # Orchestrator (auto-generated)
+│   └── invoke-el-capitan.md   # Worker endpoint (auto-generated)
+├── workflows/
+│   └── rn.yaml                # Pipeline definition
+└── CLAUDE.md                  # Project documentation</code></pre>
+  </div>
+  <h4>Step 3: The Factory Principle</h4>
+  <p>Squad Architect builds the <strong>factory, not the products</strong>. Templates generate everything:</p>
+  <table><thead><tr><th>Template</th><th>Generates</th></tr></thead><tbody>
+    <tr><td><code>AGENT_TEMPLATE.md</code></td><td>Agent definitions with modes, tasks, rules</td></tr>
+    <tr><td><code>SKILL_TEMPLATE.md</code></td><td>Skill SKILL.md + FORMAT.md + VOICE.md</td></tr>
+    <tr><td><code>PASSPORT_TEMPLATE.md</code></td><td>Unique agent IDs</td></tr>
+    <tr><td><code>EL_CAPITAN_TEMPLATE.md</code></td><td>Orchestrator command</td></tr>
+    <tr><td><code>PIPELINE_TEMPLATE.md</code></td><td>Workflow YAML with phases and gates</td></tr>
+  </tbody></table>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li>Squad Architect = CLI that generates complete agent squads for Claude Code</li>
+  <li>Two phases: Design (interactive) &rarr; Build (non-interactive)</li>
+  <li>Generates agents, skills, commands, pipeline YAML, orchestrator, CLAUDE.md</li>
+  <li>Factory principle: templates generate everything, fix the factory not the output</li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(0)" disabled>&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(1)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(2)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 2 ============ -->
+<section id="tutorial-2" class="tutorial" data-difficulty="beginner" data-time="10">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 02</span>
+  <h2>Installation</h2>
+  <div class="meta"><span class="time-badge">10 min</span><span class="diff-badge beginner">Beginner</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li>Install Squad Architect via quick install or manual download</li>
+  <li>Prerequisites: Claude Code CLI</li>
+  <li>Verify the installation</li>
+</ul></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: Prerequisites</h4>
+  <p>Squad Architect requires <strong>Claude Code CLI</strong> installed and authenticated:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Install Claude Code CLI
+npm install -g @anthropic-ai/claude-code
+
+# Verify Claude is authenticated
+claude --version</code></pre>
+  </div>
+  <h4>Step 2: Quick Install (macOS / Linux)</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># One-line install (detects OS + architecture automatically)
+curl -fsSL https://raw.githubusercontent.com/endorphin-ai/squad-architect/main/install.sh | bash</code></pre>
+  </div>
+  <p>The installer detects your OS (darwin/linux) and architecture (amd64/arm64), downloads the latest release with checksum verification, and places the binary in your PATH.</p>
+  <h4>Step 3: Manual Download</h4>
+  <p>Download from <a href="https://github.com/endorphin-ai/squad-architect/releases">GitHub Releases</a>:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Download the binary for your platform
+# macOS M-series: squad-architect_*_darwin_arm64.tar.gz
+# macOS Intel:    squad-architect_*_darwin_amd64.tar.gz
+# Linux x86_64:   squad-architect_*_linux_amd64.tar.gz
+
+tar -xzf squad-architect_*.tar.gz
+sudo mv squad-architect /usr/local/bin/</code></pre>
+  </div>
+  <h4>Step 4: Verify Installation</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">squad-architect --help</code></pre>
+  </div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li>Requires Claude Code CLI installed and authenticated</li>
+  <li>Quick install via <code>curl | bash</code> with checksum verification</li>
+  <li>Manual download from GitHub Releases for all platforms</li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(1)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(2)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(3)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 3 ============ -->
+<section id="tutorial-3" class="tutorial" data-difficulty="beginner" data-time="20">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 03</span>
+  <h2>Design — Interactive Squad Blueprint</h2>
+  <div class="meta"><span class="time-badge">20 min</span><span class="diff-badge beginner">Beginner</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li>How to run <code>squad-architect design</code></li>
+  <li>Design session slash commands: /commands, /skills, /save, /cancel</li>
+  <li>How to approve a design</li>
+  <li>Design resume: pick up where you left off</li>
+</ul></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: Start a Design Session</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">cd your-project
+squad-architect design</code></pre>
+  </div>
+  <p>The CLI scans your project, loads embedded catalogs, and opens an interactive session with Claude. Describe the squad you need:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">Design Session</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">╭──────────────────────────────────────────╮
+│  Squad Architect — Design Session        │
+│  Scanning project...                     │
+╰──────────────────────────────────────────╯
+
+ℹ Found: 3 agents, 4 skills, 2 commands
+
+Describe the squad you want to build:
+❯ I need a fullstack squad for React Native + Express API
+
+◐ Designing squad...
+
+I'll design a 6-agent squad for your React Native + Express stack:
+
+| Agent            | Role              | Skill           | Phase | Model  |
+|------------------|-------------------|-----------------|-------|--------|
+| pm-rn            | Product Manager   | pm-rn           | 0     | sonnet |
+| api-architect-rn | API Architect     | api-design-rn   | 1     | opus   |
+| backend-rn       | Express Backend   | express-backend | 2     | opus   |
+| frontend-rn      | React Native      | rn-frontend     | 3     | sonnet |
+| qa-rn            | QA Engineer       | testing-rn      | 4     | sonnet |
+| reviewer-rn      | Code Reviewer     | code-review-rn  | 5     | opus   |
+
+Type `/commands` to pick commands, `/skills` to pick skills.</code></pre>
+  </div>
+  <h4>Step 2: Slash Commands During Design</h4>
+  <table><thead><tr><th>Command</th><th>What it does</th></tr></thead><tbody>
+    <tr><td><code>/commands</code></td><td>Open TUI picker — browse and select embedded commands</td></tr>
+    <tr><td><code>/skills</code></td><td>Open TUI picker — browse and select embedded skills</td></tr>
+    <tr><td><code>/save</code></td><td>Save conversation draft (not final design)</td></tr>
+    <tr><td><code>/restart</code></td><td>Clear history, start fresh</td></tr>
+    <tr><td><code>/history</code></td><td>Show turn count</td></tr>
+    <tr><td><code>/cancel</code></td><td>Exit without saving</td></tr>
+  </tbody></table>
+  <h4>Step 3: Approve the Design</h4>
+  <p>When you're satisfied, use any approval phrase:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">Approval</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">❯ approve
+
+◐ Generating design...
+✓ Design saved to .squad/design.json
+✓ 6 agents, 6 skills, 5 phases defined
+
+Next: squad-architect build</code></pre>
+  </div>
+  <p>Approval phrases: <code>approve</code>, <code>looks good</code>, <code>lgtm</code>, <code>ship it</code>, <code>build it</code>.</p>
+  <h4>Step 4: Design Resume</h4>
+  <p>If <code>.squad/design.json</code> already exists, the CLI detects it and offers:</p>
+  <ul>
+    <li><strong>Resume</strong> — Continue from the existing design</li>
+    <li><strong>Restart</strong> — Start fresh, discard existing design</li>
+    <li><strong>Cancel</strong> — Exit</li>
+  </ul>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Resume non-interactively
+squad-architect design --resume</code></pre>
+  </div>
+  <h4>Step 5: Design Flags</h4>
+  <table><thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>--dir</code></td><td><code>.</code></td><td>Project directory to scan</td></tr>
+    <tr><td><code>--output</code></td><td><code>.squad/design.json</code></td><td>Design file output path</td></tr>
+    <tr><td><code>--model</code></td><td>from config</td><td>Claude model to use</td></tr>
+    <tr><td><code>--resume</code></td><td>—</td><td>Resume from existing design</td></tr>
+  </tbody></table>
+</div>
+<div class="challenge"><h3>Try It Yourself</h3><div class="challenge-card">
+  <p>Run <code>squad-architect design</code> in a project and describe a 3-agent squad (PM + Developer + Reviewer). Use <code>/commands</code> to browse available commands. Approve the design and inspect <code>.squad/design.json</code>.</p>
+  <details><summary>Hint</summary><p>Start simple: "I need a squad with a PM, a backend developer, and a code reviewer for my Node.js API." Claude will propose agents, skills, and phases. You can iterate before approving.</p></details>
+</div></div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li><code>squad-architect design</code> opens an interactive session with Claude</li>
+  <li>Use <code>/commands</code> and <code>/skills</code> to browse embedded catalogs</li>
+  <li>Approve with "approve", "lgtm", "ship it", or "build it"</li>
+  <li>Design saves to <code>.squad/design.json</code> — resume later with <code>--resume</code></li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(2)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(3)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(4)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 4 ============ -->
+<section id="tutorial-4" class="tutorial" data-difficulty="intermediate" data-time="20">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 04</span>
+  <h2>Build — Generate the Squad</h2>
+  <div class="meta"><span class="time-badge">20 min</span><span class="diff-badge intermediate">Intermediate</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li>How <code>squad-architect build</code> scaffolds everything</li>
+  <li>Build phases and progress tracking</li>
+  <li>Build resume for interrupted builds</li>
+  <li>What files are created and why</li>
+</ul></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: Run the Build</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">squad-architect build</code></pre>
+  </div>
+  <div class="code-block"><div class="code-header"><span class="file-path">Build Output</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">╭──────────────────────────────────────────╮
+│  Squad Architect — Build                 │
+│  Loading design from .squad/design.json  │
+╰──────────────────────────────────────────╯
+
+ℹ Design: 6 agents, 6 skills, 5 phases
+◐ Building squad...
+
+✓ Scaffolded skill: pm-rn
+✓ Scaffolded skill: api-design-rn
+✓ Scaffolded skill: express-backend
+✓ Scaffolded skill: rn-frontend
+✓ Scaffolded skill: testing-rn
+✓ Scaffolded skill: code-review-rn
+✓ Scaffolded agent: pm-rn (ID: pm-rn-agent-001)
+✓ Scaffolded agent: backend-rn (ID: backend-rn-agent-001)
+✓ Generated: .claude/workflows/rn.yaml
+✓ Generated: .claude/commands/el-capitan.md
+✓ Generated: CLAUDE.md
+
+Build complete (2m 34s)
+Files created: 42
+
+Next steps:
+  1. Open Claude Code in this project
+  2. Run /el-capitan "your task here"</code></pre>
+  </div>
+  <h4>Step 2: Build Phases</h4>
+  <p>The build progresses through 6 phases:</p>
+  <table><thead><tr><th>#</th><th>Phase</th><th>What happens</th></tr></thead><tbody>
+    <tr><td>1</td><td>Scaffolding</td><td>Creates skill folders and agent files from templates</td></tr>
+    <tr><td>2</td><td>Filling skills</td><td>Claude fills SKILL.md, FORMAT.md, VOICE.md, workflows</td></tr>
+    <tr><td>3</td><td>Customizing agents</td><td>Claude writes agent-specific modes, tasks, rules</td></tr>
+    <tr><td>4</td><td>Generating orchestration</td><td>Creates el-capitan, invoke-el-capitan, workflow YAML</td></tr>
+    <tr><td>5</td><td>Generating CLAUDE.md</td><td>Writes project documentation with squad info</td></tr>
+    <tr><td>6</td><td>Verifying</td><td>Checks for zero TODOs, validates all files</td></tr>
+  </tbody></table>
+  <h4>Step 3: Build Flags</h4>
+  <table><thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>--design</code></td><td><code>.squad/design.json</code></td><td>Design file path</td></tr>
+    <tr><td><code>--dir</code></td><td><code>.</code></td><td>Target project directory</td></tr>
+    <tr><td><code>--verbose</code></td><td>—</td><td>Show detailed Claude output</td></tr>
+    <tr><td><code>--timeout</code></td><td>—</td><td>Build timeout (e.g. <code>30m</code>, <code>1h</code>)</td></tr>
+    <tr><td><code>--log</code></td><td>—</td><td>Save full build log to file</td></tr>
+  </tbody></table>
+  <h4>Step 4: Build Resume</h4>
+  <p>If a build is interrupted, the CLI saves progress to <code>.squad/build-state.json</code>. Next time you run <code>build</code>, it offers to resume:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Resume interrupted build automatically
+squad-architect build --resume</code></pre>
+  </div>
+  <h4>Step 5: Agent Passports</h4>
+  <p>Every scaffolded agent gets a unique passport with an auto-incrementing ID:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">.claude/agent-memory/backend-rn/PASSPORT.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-yaml">---
+agent_id: "backend-rn-agent-001"
+agent_name: "backend-rn"
+squad: "rn"
+created: "2026-03-25"
+---</code></pre>
+  </div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li><code>squad-architect build</code> reads design.json and generates everything</li>
+  <li>6 build phases: scaffold &rarr; fill skills &rarr; customize agents &rarr; orchestration &rarr; CLAUDE.md &rarr; verify</li>
+  <li>Build state saved to <code>.squad/build-state.json</code> — resume with <code>--resume</code></li>
+  <li>Every agent gets a unique passport ID</li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(3)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(4)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(5)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 5 ============ -->
+<section id="tutorial-5" class="tutorial" data-difficulty="intermediate" data-time="15">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 05</span>
+  <h2>Run — One-Step Squad Creation</h2>
+  <div class="meta"><span class="time-badge">15 min</span><span class="diff-badge intermediate">Intermediate</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li>How <code>squad-architect run</code> combines design + build</li>
+  <li>Using the generated <code>/el-capitan</code> command</li>
+  <li>The El-Capitan orchestration pipeline</li>
+</ul></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: Combined Design + Build</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Interactive design, then auto-build
+squad-architect run
+
+# Or provide a description upfront
+squad-architect run "mobile app squad with Flutter + Firebase"</code></pre>
+  </div>
+  <h4>Step 2: Using the Generated Squad</h4>
+  <p>After building, open Claude Code in your project and use the orchestrator:</p>
+  <div class="code-block"><div class="code-header"><span class="file-path">Claude Code</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Run the full pipeline
+/el-capitan "build a REST API for user management"
+
+# Dry-run — agents analyze without writing files
+/el-capitan --dry-run "refactor the auth module"</code></pre>
+  </div>
+  <h4>Step 3: The Pipeline in Action</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">El-Capitan Pipeline</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-text">/el-capitan "build a todo app"
+│
+├── Phase 0: Task(pm-rn)          → PRD document
+│   [gate: features + criteria defined]
+├── Phase 1: Task(api-architect)   → Architecture
+│   [gate: interfaces defined]
+├── Phase 2: Task(backend-rn)      → Backend code
+│   [gate: build passes]
+├── Phase 3: Task(frontend-rn)     → Frontend code
+│   [gate: build passes]
+├── Phase 4: Task(qa-rn)           → Tests
+│   [gate: tests pass]
+├── Phase 5: Task(reviewer-rn)     → Code review
+│   [gate: 0 critical issues]
+│
+▼
+Pipeline Report to User</code></pre>
+  </div>
+  <p><strong>Star topology:</strong> El-capitan dispatches all workers. Workers report back. No worker-to-worker communication.</p>
+  <div class="callout info">
+    <strong>Key Rule:</strong> The orchestrator NEVER does workers' jobs. It dispatches via <code>Task()</code> and collects results. Workers never talk to each other — only to the orchestrator.
+  </div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li><code>squad-architect run</code> = design + build in one step</li>
+  <li><code>/el-capitan "task"</code> runs the full pipeline in Claude Code</li>
+  <li>Star topology: orchestrator dispatches, workers report back</li>
+  <li>Each phase has a validation gate — pipeline stops on failure</li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(4)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(5)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(6)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 6 ============ -->
+<section id="tutorial-6" class="tutorial" data-difficulty="intermediate" data-time="15">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 06</span>
+  <h2>Review — Quality Check Components</h2>
+  <div class="meta"><span class="time-badge">15 min</span><span class="diff-badge intermediate">Intermediate</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li>How <code>squad-architect review</code> checks component quality</li>
+  <li>Reviewing agents, commands, and skills</li>
+  <li>Scoring rubric and pass/fail criteria</li>
+</ul></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: Review an Agent</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">squad-architect review agent .claude/agents/backend-rn.md</code></pre>
+  </div>
+  <h4>Step 2: Review a Skill</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">squad-architect review skill .claude/skills/express-backend/SKILL.md -o report.md</code></pre>
+  </div>
+  <h4>Step 3: Review a Command</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash">squad-architect review command .claude/commands/el-capitan.md</code></pre>
+  </div>
+  <h4>Step 4: Scoring Rubric</h4>
+  <table><thead><tr><th>Score</th><th>Rating</th><th>Meaning</th></tr></thead><tbody>
+    <tr><td>9-10</td><td>Exemplary</td><td>Production-ready, no changes needed</td></tr>
+    <tr><td>7-8</td><td>Good</td><td>Minor improvements possible</td></tr>
+    <tr><td>5-6</td><td>Acceptable</td><td>Functional but needs work</td></tr>
+    <tr><td>3-4</td><td>Needs Work</td><td>Significant issues</td></tr>
+    <tr><td>0-2</td><td>Poor</td><td>Major rewrite required</td></tr>
+  </tbody></table>
+  <p><strong>Pass threshold:</strong> 7.5 or above.</p>
+  <h4>Step 5: Review Flags</h4>
+  <table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>-o, --output</code></td><td>Write report to file</td></tr>
+    <tr><td><code>-m, --model</code></td><td>Model for review</td></tr>
+    <tr><td><code>--timeout</code></td><td>Review timeout (e.g. <code>15m</code>)</td></tr>
+  </tbody></table>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li><code>review agent|skill|command &lt;path&gt;</code> runs a quality check</li>
+  <li>Scoring: 0-10 scale, pass at 7.5+</li>
+  <li>Reviews check frontmatter, structure, completeness, orchestration, rules</li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(5)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(6)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(7)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 7 ============ -->
+<section id="tutorial-7" class="tutorial" data-difficulty="advanced" data-time="20">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 07</span>
+  <h2>Audit, Adjust &amp; Insight</h2>
+  <div class="meta"><span class="time-badge">20 min</span><span class="diff-badge advanced">Advanced</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li><code>audit</code> — Analyze squad health</li>
+  <li><code>adjust</code> — Modify squads with natural language</li>
+  <li><code>insight</code> — Generate intelligence reports</li>
+</ul></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: Audit — Squad Health Check</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Full squad analysis
+squad-architect audit --code=&lt;CODE&gt;
+
+# JSON output
+squad-architect audit --code=&lt;CODE&gt; --format json --output audit.json</code></pre>
+  </div>
+  <p>Audit scans your squad and reports: inventory, coverage, anti-patterns, and recommendations.</p>
+  <h4>Step 2: Adjust — Natural Language Modifications</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Add a new agent
+squad-architect adjust "add a security scanner agent to the pipeline" --code=&lt;CODE&gt;
+
+# Rename and update references
+squad-architect adjust "rename backend-dev to api-dev and update all references" --code=&lt;CODE&gt;</code></pre>
+  </div>
+  <h4>Step 3: Insight — Intelligence Reports</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># Health overview
+squad-architect insight health --code=&lt;CODE&gt;
+
+# Find capability gaps
+squad-architect insight gaps --code=&lt;CODE&gt;
+
+# Performance analysis
+squad-architect insight performance --code=&lt;CODE&gt;
+
+# Everything combined
+squad-architect insight full --code=&lt;CODE&gt; --output full-report.md</code></pre>
+  </div>
+  <h4>Insight Report Types</h4>
+  <table><thead><tr><th>Type</th><th>What it analyzes</th></tr></thead><tbody>
+    <tr><td><code>health</code></td><td>Overall squad health, coverage, coherence</td></tr>
+    <tr><td><code>gaps</code></td><td>Missing capabilities, uncovered domains</td></tr>
+    <tr><td><code>performance</code></td><td>Agent efficiency, pipeline bottlenecks</td></tr>
+    <tr><td><code>compose</code></td><td>Composition quality, inter-agent dependencies</td></tr>
+    <tr><td><code>full</code></td><td>All of the above combined</td></tr>
+  </tbody></table>
+  <div class="callout info">
+    <strong>Access Control:</strong> <code>audit</code>, <code>adjust</code>, and <code>insight</code> are gated commands requiring <code>--code=&lt;CODE&gt;</code>. Core commands (<code>design</code>, <code>build</code>, <code>run</code>, <code>review</code>) are ungated.
+  </div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li><code>audit</code> — comprehensive health check of your squad</li>
+  <li><code>adjust</code> — modify squads with natural language instructions</li>
+  <li><code>insight</code> — 5 report types: health, gaps, performance, compose, full</li>
+  <li>All three are gated admin commands (require access code)</li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(6)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(7)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(8)">Next &rarr;</button>
+</div>
+</section>
+
+<!-- ============ TUTORIAL 8 ============ -->
+<section id="tutorial-8" class="tutorial" data-difficulty="advanced" data-time="15">
+<div class="tutorial-header">
+  <span class="tutorial-number">TUTORIAL 08</span>
+  <h2>Full Workflow — End to End</h2>
+  <div class="meta"><span class="time-badge">15 min</span><span class="diff-badge advanced">Advanced</span></div>
+</div>
+<div class="objectives"><h3>What You'll Learn</h3><ul>
+  <li>Complete workflow from zero to running squad</li>
+  <li>All commands and global flags at a glance</li>
+  <li>Tips for production use</li>
+</ul></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+  <h4>Step 1: The Complete Workflow</h4>
+  <div class="code-block"><div class="code-header"><span class="file-path">Terminal</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># 1. Design your squad (interactive)
+squad-architect design
+# → Describe your squad, iterate, approve
+
+# 2. Build the squad (non-interactive)
+squad-architect build
+# → Scaffolds everything from design.json
+
+# 3. Use the squad in Claude Code
+cd your-project
+/el-capitan "build a REST API for user management"
+# → Pipeline runs: PM → Architect → Dev → Tests → Review
+
+# 4. Review quality
+squad-architect review agent .claude/agents/backend-rn.md
+
+# 5. Audit squad health
+squad-architect audit --code=&lt;CODE&gt;
+
+# 6. Adjust from audit findings
+squad-architect adjust "add validation to skill X" --code=&lt;CODE&gt;
+
+# 7. Generate insights
+squad-architect insight full --code=&lt;CODE&gt; --output report.md</code></pre>
+  </div>
+  <h4>Step 2: Command Reference</h4>
+  <table><thead><tr><th>Tier</th><th>Commands</th><th>Access</th></tr></thead><tbody>
+    <tr><td><strong>Ungated</strong></td><td><code>design</code>, <code>build</code>, <code>run</code>, <code>review</code></td><td>No code required</td></tr>
+    <tr><td><strong>Gated</strong></td><td><code>audit</code>, <code>adjust</code>, <code>insight</code>, <code>version</code>, <code>sync</code>, <code>select</code></td><td>Requires <code>--code</code></td></tr>
+  </tbody></table>
+  <h4>Step 3: Global Flags</h4>
+  <table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>--claude-path</code></td><td>Path to Claude CLI binary (default: auto-detect)</td></tr>
+    <tr><td><code>--code</code></td><td>Access code for gated commands</td></tr>
+    <tr><td><code>--debug</code></td><td>Enable debug logging</td></tr>
+    <tr><td><code>--quiet</code></td><td>Minimal output</td></tr>
+    <tr><td><code>--no-color</code></td><td>Disable colors (accessibility)</td></tr>
+  </tbody></table>
+  <h4>Step 4: Production Tips</h4>
+  <ul>
+    <li><strong>Start with <code>design</code></strong>, not <code>run</code> — review the design before building</li>
+    <li><strong>Use <code>--verbose</code></strong> on first build to see what Claude is doing</li>
+    <li><strong>Run <code>review</code></strong> on generated agents before using the squad</li>
+    <li><strong>Run <code>audit</code></strong> periodically to check squad health</li>
+    <li><strong>Use <code>adjust</code></strong> for incremental changes — don't rebuild from scratch</li>
+    <li><strong>Save build logs</strong> with <code>--log build.log</code> for debugging</li>
+  </ul>
+  <div class="callout tip">
+    <strong>Source:</strong> <a href="https://github.com/endorphin-ai/squad-architect">github.com/endorphin-ai/squad-architect</a> — Star the repo, report issues, contribute.
+  </div>
+</div>
+<div class="challenge"><h3>Final Challenge</h3><div class="challenge-card">
+  <p>Design and build a complete squad for your project. Use <code>squad-architect run</code>, then execute <code>/el-capitan</code> on a real task. Review one generated agent with <code>squad-architect review agent</code>.</p>
+  <details><summary>Hint</summary><p>Start with a small squad (3-4 agents) for your first build. You can always <code>adjust</code> later to add more agents or modify the pipeline.</p></details>
+</div></div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+  <li>Full workflow: design &rarr; build &rarr; /el-capitan &rarr; review &rarr; audit &rarr; adjust</li>
+  <li>Ungated commands for core workflow, gated for admin operations</li>
+  <li>Review quality early, audit periodically, adjust incrementally</li>
+  <li>Squad Architect generates the factory — you focus on the product</li>
+</ul></div>
+<div class="tutorial-footer">
+  <button class="nav-btn prev" onclick="navigateTo(7)">&larr; Previous</button>
+  <button class="complete-btn" onclick="markComplete(8)">Mark Complete &#10003;</button>
+  <button class="nav-btn next" onclick="navigateTo(8)" disabled>Course Complete!</button>
+</div>
+</section>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+<script>
+const tutorials=[{num:1,title:"What Is Squad Architect?",time:10,difficulty:"beginner"},{num:2,title:"Installation",time:10,difficulty:"beginner"},{num:3,title:"Design — Squad Blueprint",time:20,difficulty:"beginner"},{num:4,title:"Build — Generate Squad",time:20,difficulty:"intermediate"},{num:5,title:"Run — One-Step Creation",time:15,difficulty:"intermediate"},{num:6,title:"Review — Quality Check",time:15,difficulty:"intermediate"},{num:7,title:"Audit, Adjust & Insight",time:20,difficulty:"advanced"},{num:8,title:"Full Workflow",time:15,difficulty:"advanced"}];
+let currentTutorial=1;let completed=JSON.parse(localStorage.getItem('sa-course-completed')||'[]');let theme=localStorage.getItem('sa-course-theme')||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
+function init(){document.body.setAttribute('data-theme',theme);updateThemeIcon();renderNav();navigateTo(1);updateProgress()}
+function renderNav(){const nav=document.getElementById('sidebar-nav');nav.innerHTML=tutorials.map(t=>`<a class="nav-item ${t.num===currentTutorial?'active':''} ${completed.includes(t.num)?'completed':''}" onclick="navigateTo(${t.num})"><span class="nav-check">${completed.includes(t.num)?'&#10003;':'&#9675;'}</span><span class="nav-num">${String(t.num).padStart(2,'0')}</span><span class="nav-title">${t.title}</span><span class="nav-meta"><span class="nav-time">${t.time}m</span><span class="diff-dot ${t.difficulty}"></span></span></a>`).join('')}
+function navigateTo(num){if(num<1||num>tutorials.length)return;currentTutorial=num;document.querySelectorAll('.tutorial').forEach(el=>el.classList.remove('active'));const t=document.getElementById(`tutorial-${num}`);if(t)t.classList.add('active');renderNav();updateCompleteButtons();window.scrollTo(0,0);document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('visible')}
+function markComplete(num){if(!completed.includes(num)){completed.push(num);localStorage.setItem('sa-course-completed',JSON.stringify(completed));showConfetti()}updateProgress();renderNav();updateCompleteButtons()}
+function updateProgress(){const pct=(completed.length/tutorials.length)*100;document.getElementById('progress-fill').style.width=pct+'%';document.getElementById('progress-text').textContent=`${completed.length} of ${tutorials.length} completed`}
+function updateCompleteButtons(){tutorials.forEach(t=>{const s=document.getElementById(`tutorial-${t.num}`);if(!s)return;const b=s.querySelector('.complete-btn');if(b&&completed.includes(t.num)){b.textContent='Completed!';b.classList.add('done')}})}
+function resetProgress(){if(!confirm('Reset all progress?'))return;completed=[];localStorage.removeItem('sa-course-completed');updateProgress();renderNav();document.querySelectorAll('.complete-btn').forEach(b=>{b.textContent='Mark Complete \u2713';b.classList.remove('done')})}
+function toggleTheme(){theme=theme==='dark'?'light':'dark';document.body.setAttribute('data-theme',theme);localStorage.setItem('sa-course-theme',theme);updateThemeIcon()}
+function updateThemeIcon(){document.querySelector('.theme-toggle').textContent=theme==='dark'?'\u263E':'\u2600'}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('visible')}
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('search-input').addEventListener('input',e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('.nav-item').forEach(i=>{i.style.display=i.querySelector('.nav-title').textContent.toLowerCase().includes(q)?'flex':'none'})})});
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowLeft')navigateTo(currentTutorial-1);if(e.key==='ArrowRight')navigateTo(currentTutorial+1);if(e.key==='Escape')toggleSidebar();if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus()}});
+function copyCode(btn){const code=btn.closest('.code-block').querySelector('code').textContent;navigator.clipboard.writeText(code).then(()=>{btn.textContent='Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000)})}
+function showConfetti(){const c=['#7c6aef','#4ade80','#facc15','#60a5fa','#f87171','#fb923c'];for(let i=0;i<30;i++){const el=document.createElement('div');el.className='confetti';el.style.left=Math.random()*100+'vw';el.style.top=Math.random()*30+'vh';el.style.background=c[Math.floor(Math.random()*c.length)];el.style.animationDelay=Math.random()*.5+'s';el.style.width=(4+Math.random()*8)+'px';el.style.height=(4+Math.random()*8)+'px';document.body.appendChild(el);setTimeout(()=>el.remove(),2000)}}
+init();
+</script>
+</body>
+</html>
