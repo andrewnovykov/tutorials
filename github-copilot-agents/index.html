@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Copilot Agents From Scratch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<style>
+:root{--bg-primary:#0f1117;--bg-secondary:#161822;--bg-tertiary:#1c1f2e;--bg-card:#1e2030;--bg-code:#12141f;--text-primary:#e2e4f0;--text-secondary:#a0a4c0;--text-muted:#6b7094;--accent:#7c6aef;--accent-light:#9d8ff5;--accent-glow:rgba(124,106,239,0.15);--green:#4ade80;--green-dim:#22c55e;--yellow:#facc15;--red:#f87171;--orange:#fb923c;--blue:#60a5fa;--border:#2a2d42;--sidebar-width:300px;--topbar-height:56px;--radius:10px;--radius-sm:6px;--transition:0.25s ease}
+[data-theme="light"]{--bg-primary:#f8f9fc;--bg-secondary:#fff;--bg-tertiary:#f0f1f5;--bg-card:#fff;--bg-code:#f5f6fa;--text-primary:#1a1c2e;--text-secondary:#4a4e6a;--text-muted:#8890b5;--accent:#6c5ce7;--accent-light:#7c6aef;--accent-glow:rgba(108,92,231,0.1);--border:#e0e2ee}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;overflow-x:hidden}code,pre,.code-header .file-path{font-family:'JetBrains Mono',monospace}
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-height);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:1000;backdrop-filter:blur(12px)}.topbar .hamburger{display:none;background:none;border:none;color:var(--text-primary);font-size:22px;cursor:pointer;margin-right:12px;padding:4px 8px;border-radius:var(--radius-sm)}.topbar .hamburger:hover{background:var(--bg-tertiary)}.topbar .logo{font-weight:700;font-size:16px;color:var(--accent-light);white-space:nowrap}.topbar .logo span{color:var(--text-secondary);font-weight:400}
+.progress-wrap{flex:1;margin:0 24px;max-width:400px}.progress-label{font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:500}.progress-bar{height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-light));border-radius:3px;transition:width .5s ease;width:0%}
+.topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center}.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius-sm);padding:6px 10px;cursor:pointer;font-size:16px;transition:var(--transition)}.theme-toggle:hover{background:var(--bg-tertiary);color:var(--text-primary)}
+.sidebar{position:fixed;top:var(--topbar-height);left:0;width:var(--sidebar-width);height:calc(100vh - var(--topbar-height));background:var(--bg-secondary);border-right:1px solid var(--border);overflow-y:auto;z-index:900;display:flex;flex-direction:column;transition:transform var(--transition)}.sidebar-search{padding:16px;border-bottom:1px solid var(--border)}.sidebar-search input{width:100%;padding:8px 12px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:var(--transition)}.sidebar-search input::placeholder{color:var(--text-muted)}.sidebar-search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.sidebar-nav{flex:1;padding:8px 0;overflow-y:auto}.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;color:var(--text-secondary);font-size:13px;transition:var(--transition);text-decoration:none;border-left:3px solid transparent}.nav-item:hover{background:var(--bg-tertiary);color:var(--text-primary)}.nav-item.active{background:var(--accent-glow);color:var(--accent-light);border-left-color:var(--accent);font-weight:600}.nav-item.completed .nav-check{color:var(--green)}.nav-check{font-size:14px;min-width:18px;text-align:center}.nav-num{font-size:11px;font-weight:600;color:var(--text-muted);min-width:22px}.nav-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav-meta{display:flex;gap:6px;align-items:center}.nav-time{font-size:10px;color:var(--text-muted)}.diff-dot{width:8px;height:8px;border-radius:50%}.diff-dot.beginner{background:var(--green)}.diff-dot.intermediate{background:var(--yellow)}.diff-dot.advanced{background:var(--red)}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}.reset-btn{width:100%;padding:8px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-muted);font-size:12px;cursor:pointer;transition:var(--transition);font-family:'DM Sans',sans-serif}.reset-btn:hover{border-color:var(--red);color:var(--red)}
+.main{margin-left:var(--sidebar-width);margin-top:var(--topbar-height);min-height:calc(100vh - var(--topbar-height))}.tutorial{display:none;padding:48px 64px;max-width:900px;margin:0 auto;animation:fadeIn .3s ease}.tutorial.active{display:block}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tutorial-header{margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid var(--border)}.tutorial-number{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-glow);padding:4px 10px;border-radius:20px;margin-bottom:12px;letter-spacing:1px}.tutorial-header h2{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:16px}.meta{display:flex;gap:12px;flex-wrap:wrap}.time-badge,.diff-badge{font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500}.time-badge{background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border)}.diff-badge.beginner{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.2)}.diff-badge.intermediate{background:rgba(250,204,21,0.1);color:var(--yellow);border:1px solid rgba(250,204,21,0.2)}.diff-badge.advanced{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.tutorial h3{font-size:22px;font-weight:700;margin:40px 0 16px}.tutorial h4{font-size:17px;font-weight:600;margin:28px 0 12px}.tutorial p{margin-bottom:16px;color:var(--text-secondary);font-size:15px}.tutorial ul,.tutorial ol{margin-bottom:16px;padding-left:24px;color:var(--text-secondary);font-size:15px}.tutorial li{margin-bottom:6px}.tutorial strong{color:var(--text-primary)}.tutorial a{color:var(--accent-light);text-decoration:none}.tutorial a:hover{text-decoration:underline}
+.code-block{margin:16px 0 24px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-code)}.code-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg-tertiary);border-bottom:1px solid var(--border)}.code-header .file-path{font-size:12px;color:var(--text-muted)}.copy-btn{background:none;border:1px solid var(--border);color:var(--text-muted);font-size:11px;padding:3px 10px;border-radius:var(--radius-sm);cursor:pointer;font-family:'DM Sans',sans-serif;transition:var(--transition)}.copy-btn:hover{color:var(--text-primary);border-color:var(--accent)}.copy-btn.copied{color:var(--green);border-color:var(--green)}.code-block pre{padding:16px;margin:0;overflow-x:auto;font-size:13px;line-height:1.6}.code-block pre code{background:none!important;padding:0!important}
+.tutorial p code,.tutorial li code,.tutorial td code{background:var(--bg-tertiary);padding:2px 7px;border-radius:4px;font-size:13px;color:var(--accent-light);border:1px solid var(--border)}
+.tutorial table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:14px}.tutorial th{text-align:left;padding:10px 16px;background:var(--bg-tertiary);border:1px solid var(--border);color:var(--text-primary);font-weight:600}.tutorial td{padding:10px 16px;border:1px solid var(--border);color:var(--text-secondary)}
+.challenge-card{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius);padding:20px 24px;margin:12px 0}.challenge-card details{margin-top:12px}.challenge-card summary{cursor:pointer;color:var(--accent-light);font-weight:500;font-size:14px}.challenge-card details p{margin-top:8px;padding-left:16px;border-left:2px solid var(--border)}
+.callout{padding:16px 20px;border-radius:var(--radius);margin:16px 0 24px;font-size:14px;border:1px solid}.callout.info{background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.2);color:var(--blue)}.callout.warn{background:rgba(250,204,21,0.08);border-color:rgba(250,204,21,0.2);color:var(--yellow)}.callout.tip{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.2);color:var(--green)}.callout strong{color:inherit}.callout code{color:inherit;border-color:currentColor;opacity:.8}
+.tutorial-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}.nav-btn{padding:10px 20px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:var(--transition)}.nav-btn:hover{border-color:var(--accent);color:var(--accent-light)}.nav-btn:disabled{opacity:.3;cursor:default}.complete-btn{padding:10px 24px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:var(--transition)}.complete-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--accent-glow)}.complete-btn.done{background:var(--green-dim)}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.topbar .hamburger{display:block}.main{margin-left:0}.tutorial{padding:24px 20px}.tutorial-header h2{font-size:24px}.progress-wrap{display:none}}
+@media print{.topbar,.sidebar,.tutorial-footer,.theme-toggle,.copy-btn{display:none!important}.main{margin-left:0}.tutorial{display:block!important;page-break-after:always;padding:20px}}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:899}.sidebar-overlay.visible{display:block}
+@keyframes confetti-fall{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(100px) rotate(720deg);opacity:0}}.confetti{position:fixed;pointer-events:none;z-index:9999;width:8px;height:8px;border-radius:2px;animation:confetti-fall 1.5s ease-out forwards}
+</style>
+</head>
+<body data-theme="dark">
+<div class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
+  <div class="logo">GitHub Copilot Agents <span>&#183; From Scratch</span></div>
+  <div class="progress-wrap"><div class="progress-label"><span id="progress-text">0 of 8 completed</span></div><div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div></div>
+  <div class="topbar-actions"><button class="theme-toggle" onclick="toggleTheme()">&#9790;</button></div>
+</div>
+<div class="sidebar" id="sidebar"><div class="sidebar-search"><input type="text" id="search-input" placeholder="Search tutorials... ( / )"></div><nav class="sidebar-nav" id="sidebar-nav"></nav><div class="sidebar-footer"><button class="reset-btn" onclick="resetProgress()">Reset Progress</button></div></div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="main" id="main-content">
+
+<!-- ============ T1 ============ -->
+<section id="tutorial-1" class="tutorial" data-difficulty="beginner" data-time="10">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 01</span><h2>What Are Copilot Custom Agents?</h2><div class="meta"><span class="time-badge">10 min</span><span class="diff-badge beginner">Beginner</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: The Three File Types</h4>
+<p>GitHub Copilot custom agents are built from three file types living in your repo:</p>
+<table><thead><tr><th>Type</th><th>Location</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><strong>Agent</strong></td><td><code>.github/agents/</code></td><td>WHAT to do (workflow, orchestration)</td></tr>
+<tr><td><strong>Tree</strong></td><td><code>.copilot_utils/context/trees/</code></td><td>HOW to decide (if/else logic)</td></tr>
+<tr><td><strong>Knowledge</strong></td><td><code>.copilot_utils/context/knowledge/</code></td><td>WHAT to use (reference info, patterns)</td></tr>
+</tbody></table>
+<h4>Step 2: Directory Layout</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">Project Structure</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash">.github/agents/                    # Agent workflow files
+    └── my-agent.agent.md
+.copilot_utils/
+    └── context/
+        ├── trees/                 # Decision trees (if/else)
+        │   ├── strategy_selection.md
+        │   └── flag_selection.md
+        └── knowledge/             # Reference knowledge
+            ├── anti_patterns.md
+            └── code_patterns.md</code></pre></div>
+<h4>Step 3: The Separation Principle</h4>
+<ul>
+<li><strong>Agents</strong> contain workflow only — never embed knowledge or decision logic</li>
+<li><strong>Trees</strong> contain branching decisions — one file per decision type</li>
+<li><strong>Knowledge</strong> contains reference info — many small files, not one big file</li>
+</ul>
+<div class="callout tip"><strong>Key Rule:</strong> Agents <em>reference</em> trees and knowledge files — they never embed them. This keeps agents focused on orchestration and makes knowledge reusable across agents.</div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>Three file types: Agent (workflow), Tree (decisions), Knowledge (reference)</li>
+<li>Agents live in <code>.github/agents/</code>, context in <code>.copilot_utils/context/</code></li>
+<li>Separation principle: agents reference, never embed</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(0)" disabled>&larr; Previous</button><button class="complete-btn" onclick="markComplete(1)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(2)">Next &rarr;</button></div>
+</section>
+
+<!-- ============ T2 ============ -->
+<section id="tutorial-2" class="tutorial" data-difficulty="beginner" data-time="15">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 02</span><h2>Your First Agent — Frontmatter &amp; Body</h2><div class="meta"><span class="time-badge">15 min</span><span class="diff-badge beginner">Beginner</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: Minimal Agent</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">.github/agents/my-reviewer.agent.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-yaml">---
+name: My-Reviewer
+description: 'Reviews code for anti-patterns and suggests fixes'
+tools: ['read', 'edit', 'search']
+model: 'Claude Sonnet 4.5'
+---
+
+## Role
+
+You are a senior code reviewer focused on identifying
+anti-patterns and suggesting improvements.
+
+## Dynamic Parameters
+
+- **filePath**: Path to the file to review
+
+## Variable Extraction Strategy
+
+1. **From User Input**: Parse file path from argument
+2. **From File Context**: Use current open file
+3. **Ask User**: If not provided, request it
+
+## Workflow
+
+### PHASE 1: Read and Analyze
+
+1. Read the file at `${filePath}`
+2. Identify anti-patterns and issues
+3. Categorize by severity: CRITICAL, HIGH, MEDIUM
+
+### PHASE 2: Generate Report
+
+1. List all findings with line numbers
+2. Suggest fix for each issue
+3. Provide overall quality score
+
+## Return Format
+
+**Status:** PASS | FAIL
+**Issues Found:** count
+**Report:** markdown table of findings</code></pre></div>
+<h4>Step 2: Frontmatter Properties</h4>
+<table><thead><tr><th>Property</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>name</code></td><td>Optional</td><td>Defaults to filename</td></tr>
+<tr><td><code>description</code></td><td><strong>Yes</strong></td><td>50-150 chars, single-quoted</td></tr>
+<tr><td><code>tools</code></td><td>Optional</td><td>Omit = all tools. <code>['read', 'edit', 'search', 'execute', 'agent', 'web', 'todo']</code></td></tr>
+<tr><td><code>model</code></td><td>Recommended</td><td><code>'Claude Sonnet 4.5'</code>, <code>'gpt-4o'</code></td></tr>
+<tr><td><code>target</code></td><td>Optional</td><td><code>'vscode'</code> or <code>'github-copilot'</code></td></tr>
+<tr><td><code>infer</code></td><td>Optional</td><td><code>true</code> = auto-invoke by context</td></tr>
+<tr><td><code>argument-hint</code></td><td>Optional</td><td>Input hint (VS Code only)</td></tr>
+<tr><td><code>handoffs</code></td><td>Optional</td><td>Sub-agent delegations (VS Code only)</td></tr>
+</tbody></table>
+<h4>Step 3: Tool Aliases</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">Available Tools</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-yaml"># Standard tools
+tools: ['read', 'edit', 'search', 'execute', 'agent', 'web', 'todo']
+
+# MCP server tools
+tools: ['github/*']                    # All GitHub tools
+tools: ['github/get_file_contents']    # Specific tool
+tools: ['playwright/*']                # Browser automation
+tools: ['my-mcp/tool-name']           # Custom MCP server</code></pre></div>
+<h4>Step 4: Agent Body Sections</h4>
+<table><thead><tr><th>Section</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><strong>Role</strong></td><td>Agent's expertise and focus area</td></tr>
+<tr><td><strong>Dynamic Parameters</strong></td><td>Expected input variables</td></tr>
+<tr><td><strong>Variable Extraction Strategy</strong></td><td>How to get variables (input, context, ask)</td></tr>
+<tr><td><strong>Workflow</strong></td><td>Multi-phase execution (PHASE 1, PHASE 2...)</td></tr>
+<tr><td><strong>Return Format</strong></td><td>Structured output definition</td></tr>
+</tbody></table>
+<h4>Step 5: Naming Convention</h4>
+<p>Agent files use <code>lowercase-with-hyphens.agent.md</code>. The <code>.agent.md</code> suffix tells VS Code this is an agent file.</p>
+</div>
+<div class="challenge"><h3>Try It Yourself</h3><div class="challenge-card">
+<p>Create <code>.github/agents/hello-world.agent.md</code> with a description, <code>read</code> tool only, and a single-phase workflow that reads a file and summarizes it. Invoke it in VS Code Copilot Chat with <code>@hello-world</code>.</p>
+<details><summary>Hint</summary><p>Keep it minimal: one tool (<code>read</code>), one phase, one output. The description should be under 150 chars. Test with <code>@hello-world summarize this file</code>.</p></details>
+</div></div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>Agents are <code>.agent.md</code> files in <code>.github/agents/</code></li>
+<li>Frontmatter: <code>description</code> is required, <code>tools</code> and <code>model</code> recommended</li>
+<li>Body sections: Role, Dynamic Parameters, Variable Extraction, Workflow, Return Format</li>
+<li>Invoke with <code>@agent-name</code> in Copilot Chat</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(1)">&larr; Previous</button><button class="complete-btn" onclick="markComplete(2)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(3)">Next &rarr;</button></div>
+</section>
+
+<!-- ============ T3 ============ -->
+<section id="tutorial-3" class="tutorial" data-difficulty="beginner" data-time="15">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 03</span><h2>Context Files — Trees &amp; Knowledge</h2><div class="meta"><span class="time-badge">15 min</span><span class="diff-badge beginner">Beginner</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: Decision Trees</h4>
+<p>Trees contain if/else logic for agent decisions:</p>
+<div class="code-block"><div class="code-header"><span class="file-path">.copilot_utils/context/trees/environment_selection.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown"># Environment Selection Tree
+
+Input: `{environment}` parameter
+
+Decision:
+├── "development" → Use local config, enable debug logging
+├── "staging"     → Use staging API, enable monitoring
+├── "production"  → Use prod config, enable rate limiting
+└── Unknown       → Default to "development"</code></pre></div>
+<h4>Step 2: Knowledge Files</h4>
+<p>Knowledge files contain reference information — patterns, rules, examples:</p>
+<div class="code-block"><div class="code-header"><span class="file-path">.copilot_utils/context/knowledge/anti_patterns.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown"># Anti-Patterns to Identify
+
+## Vague Verbs
+- "handle" → too ambiguous, specify exact action
+- "process" → what processing? be specific
+- "manage" → manage how? define the operation
+
+## Combined Actions
+- One function doing multiple unrelated things
+- Single endpoint handling different resource types
+- Mixed concerns in same module
+
+## Missing Error Handling
+- No try/catch around I/O operations
+- Silently swallowing exceptions
+- Generic error messages without context</code></pre></div>
+<h4>Step 3: Referencing in Agents</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">In your agent's workflow</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown">### PHASE 2: Apply Decision
+
+**Apply tree:** `.copilot_utils/context/trees/environment_selection.md`
+
+1. Evaluate `{environment}` against tree criteria
+2. Set `configPath` based on match
+
+### PHASE 3: Validate
+
+**Reference:** `.copilot_utils/context/knowledge/anti_patterns.md`
+
+1. Check code against each pattern listed
+2. Report any matches found</code></pre></div>
+<h4>Step 4: Decomposition Principle</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">File Organization</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash"># BAD — one large file
+knowledge/
+└── everything.md (500 lines)
+
+# GOOD — many small files
+knowledge/
+├── anti_patterns.md (50 lines)
+├── setup_patterns.md (40 lines)
+├── teardown_patterns.md (30 lines)
+└── validation_rules.md (45 lines)
+
+# Same for trees — one per decision
+trees/
+├── environment_selection.md
+├── strategy_selection.md
+└── output_format_selection.md</code></pre></div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>Trees = decision logic (if/else). Reference with <code>**Apply tree:**</code></li>
+<li>Knowledge = reference info (patterns, rules). Reference with <code>**Reference:**</code></li>
+<li>Many small files beat one large file — decompose aggressively</li>
+<li>Agents reference context files, never embed their content</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(2)">&larr; Previous</button><button class="complete-btn" onclick="markComplete(3)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(4)">Next &rarr;</button></div>
+</section>
+
+<!-- ============ T4 ============ -->
+<section id="tutorial-4" class="tutorial" data-difficulty="intermediate" data-time="20">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 04</span><h2>Workflows &amp; Progress Tracking</h2><div class="meta"><span class="time-badge">20 min</span><span class="diff-badge intermediate">Intermediate</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: Phase Structure</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">Phase Pattern</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown">### PHASE 1: Gather Context
+
+**Before starting:** Mark todo #1 as "in-progress"
+
+**Steps:**
+
+1. Read the file at `${filePath}`
+2. Identify file type and structure
+3. Prepare context for next phase
+
+**Output Variables:**
+
+- `fileType` = detected type
+- `fileContent` = content summary
+
+**After completion:** Mark todo #1 as "completed"</code></pre></div>
+<h4>Step 2: Todo List Progress Tracking (VS Code)</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">Progress Tracking Setup</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown">## PROGRESS TRACKING
+
+**Initial Setup:**
+Call `manage_todo_list` with:
+
+```json
+{
+  "operation": "write",
+  "todoList": [
+    { "id": 1, "title": "Gather context", "status": "not-started" },
+    { "id": 2, "title": "Analyze code", "status": "not-started" },
+    { "id": 3, "title": "Generate report", "status": "not-started" }
+  ]
+}
+```
+
+**During Execution:**
+- Mark task as `"in-progress"` when starting
+- Mark task as `"completed"` after finishing</code></pre></div>
+<h4>Step 3: Variable Chaining Between Phases</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">Phase-to-Phase Data Flow</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown">### PHASE 1: Extract Data
+
+**Input:** User provides `{inputId}`
+**Output Variables:**
+- `inputId` = "12345"
+- `inputType` = "type_a"
+
+---
+
+### PHASE 2: Apply Decision
+
+**Input:** Uses `inputType` from Phase 1
+**Apply tree:** `.copilot_utils/context/trees/tree_1.md`
+**Output Variables:**
+- `outputPath` = "path/to/output"
+
+---
+
+### PHASE 3: Generate Output
+
+**Input:** Uses `outputPath` and `inputId` from previous phases
+**Steps:**
+1. Construct file path: `${outputPath}/${inputId}.py`
+2. Generate content using template</code></pre></div>
+<h4>Step 4: Variable Syntax</h4>
+<table><thead><tr><th>Pattern</th><th>Example</th></tr></thead><tbody>
+<tr><td>Declaration</td><td><code>**paramName**: Description</code> in Dynamic Parameters</td></tr>
+<tr><td>Usage in text</td><td><code>${paramName}</code></td></tr>
+<tr><td>Naming</td><td>camelCase: <code>projectName</code>, <code>basePath</code>, <code>outputDir</code></td></tr>
+</tbody></table>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>Each phase has: Before starting, Steps, Output Variables, After completion</li>
+<li>Todo tracking with <code>manage_todo_list</code> shows progress in VS Code sidebar</li>
+<li>Variables flow phase-to-phase via Output Variables declarations</li>
+<li>Use <code>${variableName}</code> syntax with camelCase naming</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(3)">&larr; Previous</button><button class="complete-btn" onclick="markComplete(4)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(5)">Next &rarr;</button></div>
+</section>
+
+<!-- ============ T5 ============ -->
+<section id="tutorial-5" class="tutorial" data-difficulty="intermediate" data-time="20">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 05</span><h2>Sub-Agent Orchestration</h2><div class="meta"><span class="time-badge">20 min</span><span class="diff-badge intermediate">Intermediate</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: The Orchestrator Pattern</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">Orchestrator Flow</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-text">Orchestrator → (FILE_PATH + expectations) → Sub-Agent
+Sub-Agent    → (structured JSON result)    → Orchestrator</code></pre></div>
+<p>The orchestrator <strong>never does the work itself</strong>. It gathers context, delegates to specialists, and coordinates results.</p>
+<h4>Step 2: VS Code — handoffs Syntax</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">.github/agents/orchestrator.agent.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-yaml">---
+name: VS-Code-Orchestrator
+description: 'Orchestrates validation workflow with sub-agents'
+tools: ['read', 'edit', 'search', 'agent', 'todo']
+model: 'Claude Sonnet 4.5'
+target: 'vscode'
+argument-hint: 'Provide file path to process'
+handoffs:
+    - label: 'Validate File'
+      agent: 'Example-Validator'
+      prompt: 'Analyze this file for anti-patterns and return violations'
+    - label: 'Transform File'
+      agent: 'Example-Transformer'
+      prompt: 'Apply fixes for the violations found'
+---
+
+## Workflow
+
+### PHASE 2: Delegate Analysis
+
+**Delegate to:** `Example-Validator` via handoff
+
+**Input:**
+- File: `${filePath}`
+- Rules: `.copilot_utils/context/knowledge/anti_patterns.md`
+
+**Expected return:**
+```json
+{ "status": "PASS | FAIL", "violations": [...], "count": 0 }
+```
+
+**On PASS:** Continue to Phase 3
+**On FAIL:** Record violations, continue for fixes</code></pre></div>
+<h4>Step 3: GitHub Copilot — runSubagent Syntax</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">runSubagent() Pattern</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-javascript">// Phase 1: Analyze
+const analysisResult = await runSubagent({
+  description: 'Analyze file for patterns',
+  prompt: `You are the Analyzer.
+
+Input:
+- File: ${filePath}
+- Reference: .copilot_utils/context/knowledge/anti_patterns.md
+
+Task:
+1. Read the file
+2. Identify all anti-pattern matches
+3. Return findings
+
+Return JSON:
+{ "patterns": ["..."], "lineNumbers": [10, 25], "suggestions": ["..."] }`
+});
+
+// Phase 2: Transform (chains result from Phase 1)
+const transformResult = await runSubagent({
+  description: 'Apply transformations',
+  prompt: `You are the Transformer.
+
+Input from Analyzer:
+- Patterns: ${analysisResult.patterns}
+- Lines: ${analysisResult.lineNumbers}
+
+Task:
+1. Apply fixes at specified lines
+2. Write updated file
+
+Return JSON:
+{ "status": "success", "changesApplied": 3 }`
+});</code></pre></div>
+<h4>Step 4: Orchestration Rules</h4>
+<ul>
+<li><strong>Orchestrator provides context</strong> — file path + expectations for each sub-agent</li>
+<li><strong>Sub-agents return structured data</strong> — JSON format back to orchestrator</li>
+<li><strong>Parent tools limit child</strong> — sub-agents can't use tools the parent doesn't have</li>
+<li><strong>Keep sub-agents focused</strong> — one clear task per sub-agent</li>
+<li><strong>Chain results</strong> — pass output from one sub-agent as input to next</li>
+<li><strong>Limit scale</strong> — max 5-10 sequential sub-agent calls</li>
+</ul>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>VS Code uses <code>handoffs</code> in frontmatter for sub-agent delegation</li>
+<li>GitHub Copilot uses <code>runSubagent()</code> for inline sub-agent calls</li>
+<li>Orchestrator delegates, never does the work itself</li>
+<li>Sub-agents return structured JSON, results chain between phases</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(4)">&larr; Previous</button><button class="complete-btn" onclick="markComplete(5)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(6)">Next &rarr;</button></div>
+</section>
+
+<!-- ============ T6 ============ -->
+<section id="tutorial-6" class="tutorial" data-difficulty="intermediate" data-time="20">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 06</span><h2>Prompt Chaining — Multi-Step Pipelines</h2><div class="meta"><span class="time-badge">20 min</span><span class="diff-badge intermediate">Intermediate</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: What Is a Prompt Chain?</h4>
+<p>A prompt chain is a sequence of prompts that execute in order, each building on the outputs of previous steps. Two file types:</p>
+<table><thead><tr><th>Type</th><th>Purpose</th><th>Example</th></tr></thead><tbody>
+<tr><td><strong>Magic Prompt</strong></td><td>Orchestrator — sets params, defines order</td><td><code>magic-prompt.md</code></td></tr>
+<tr><td><strong>Sub-Prompt</strong></td><td>Single step — does one task</td><td><code>1-analyze.md</code></td></tr>
+</tbody></table>
+<h4>Step 2: Magic Prompt Template</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">.github/prompts/magic-prompt.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown">{output_folder} = .results
+{final_output_file} = ./output/final.md
+
+You are executing a multi-step prompt chain.
+
+1. Navigate to the prompts folder
+2. Review all prompt files WITHOUT executing them
+3. Confirm you understand the full chain sequence
+4. Execute prompts in numerical order:
+    - 1-analyze-structure.md
+    - 2-document-components.md
+    - 3-generate-docs.md
+5. For each step, output results to `{output_folder}/`
+
+Stop ONLY when:
+- All steps are complete
+- A full `{final_output_file}` can be generated</code></pre></div>
+<h4>Step 3: Sub-Prompt Template</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">.github/prompts/1-analyze-structure.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown">You are a senior developer analyzing codebase structure.
+
+Your task:
+
+1. Identify all directories and their purposes
+2. List key files in each directory
+3. Output to ./{output_folder}/1-structure.md
+
+This task may take some time — that is expected and acceptable.
+Do not skip files or produce partial results.
+Accuracy and completeness are mission-critical.
+
+After writing ./{output_folder}/1-structure.md, read the contents
+of ./2-document-components.md and proceed accordingly
+with {output_folder} as the output-folder.</code></pre></div>
+<h4>Step 4: Variable Syntax</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">Variables</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-text"># Declaration (in magic prompt)
+{output_folder} = .results
+{final_output_file} = ./output/final.md
+
+# Usage (in sub-prompts)
+./{output_folder}/1-analysis.md
+
+# Chain command (link to next step)
+After writing ..., read ./2-next.md and proceed with {output_folder}</code></pre></div>
+<h4>Step 5: Quality Guardrails</h4>
+<p>Include in every sub-prompt to prevent shortcuts:</p>
+<div class="code-block"><div class="code-header"><span class="file-path">Guardrail Block</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-markdown">This task may take some time — that is expected and acceptable.
+Do not skip files or produce partial results due to time or complexity.
+Accuracy and completeness are mission-critical.
+Do not optimize for speed or brevity.</code></pre></div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>Magic prompt = orchestrator. Sub-prompts = individual steps.</li>
+<li>Variables declared with <code>{name} = value</code>, used with <code>{name}</code></li>
+<li>Chain command links steps: "After writing..., read next and proceed"</li>
+<li>Quality guardrails prevent the model from cutting corners</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(5)">&larr; Previous</button><button class="complete-btn" onclick="markComplete(6)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(7)">Next &rarr;</button></div>
+</section>
+
+<!-- ============ T7 ============ -->
+<section id="tutorial-7" class="tutorial" data-difficulty="advanced" data-time="15">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 07</span><h2>VS Code vs GitHub.com — Differences</h2><div class="meta"><span class="time-badge">15 min</span><span class="diff-badge advanced">Advanced</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: Feature Comparison</h4>
+<table><thead><tr><th>Feature</th><th>VS Code</th><th>GitHub.com</th></tr></thead><tbody>
+<tr><td><code>model</code> property</td><td>Yes</td><td>No</td></tr>
+<tr><td><code>argument-hint</code></td><td>Yes</td><td>No</td></tr>
+<tr><td><code>handoffs</code></td><td>Yes</td><td>No</td></tr>
+<tr><td><code>todo</code> tool</td><td>Yes</td><td>No</td></tr>
+<tr><td><code>runSubagent</code></td><td>Yes</td><td>Yes</td></tr>
+<tr><td><code>github/*</code> tools</td><td>Limited</td><td>Full access</td></tr>
+<tr><td>Custom MCP in agent</td><td>No</td><td>Org/Enterprise only</td></tr>
+<tr><td>File editing</td><td>Interactive preview</td><td>Direct edits</td></tr>
+</tbody></table>
+<h4>Step 2: Target-Specific Agents</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">VS Code Only</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-yaml">---
+name: VS-Code-Agent
+target: 'vscode'
+tools: ['read', 'edit', 'todo']   # todo only works in VS Code
+handoffs:
+    - label: 'Validate'
+      agent: 'Validator'
+      prompt: 'Run validation checks'
+---</code></pre></div>
+<div class="code-block"><div class="code-header"><span class="file-path">GitHub.com Only</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-yaml">---
+name: GitHub-Agent
+target: 'github-copilot'
+tools: ['read', 'edit', 'github/*']   # Full GitHub API access
+---</code></pre></div>
+<h4>Step 3: MCP Server Configuration</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">MCP in Agent (Org/Enterprise only)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-yaml">---
+tools: ['read', 'my-server/*']
+mcp-servers:
+    my-server:
+        type: 'local'
+        command: 'npx'
+        args: ['-y', '@org/mcp-server']
+        env:
+            API_KEY: ${{ secrets.API_KEY }}
+---</code></pre></div>
+</div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>VS Code has <code>handoffs</code>, <code>todo</code>, <code>argument-hint</code>, <code>model</code> — GitHub.com does not</li>
+<li><code>runSubagent()</code> works in both environments</li>
+<li>Use <code>target:</code> to restrict agents to a specific environment</li>
+<li>Custom MCP servers in agents are Org/Enterprise only on GitHub.com</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(6)">&larr; Previous</button><button class="complete-btn" onclick="markComplete(7)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(8)">Next &rarr;</button></div>
+</section>
+
+<!-- ============ T8 ============ -->
+<section id="tutorial-8" class="tutorial" data-difficulty="advanced" data-time="15">
+<div class="tutorial-header"><span class="tutorial-number">TUTORIAL 08</span><h2>Best Practices &amp; Complete Example</h2><div class="meta"><span class="time-badge">15 min</span><span class="diff-badge advanced">Advanced</span></div></div>
+<div class="walkthrough"><h3>Walkthrough</h3>
+<h4>Step 1: Best Practices</h4>
+<table><thead><tr><th>Do</th><th>Don't</th></tr></thead><tbody>
+<tr><td>Reference knowledge files</td><td>Embed knowledge in agents</td></tr>
+<tr><td>Decompose into many small files</td><td>Create one large knowledge file</td></tr>
+<tr><td>One tree per decision type</td><td>Mix decision logic with knowledge</td></tr>
+<tr><td>Keep agents focused on workflow</td><td>Put examples in agent files</td></tr>
+<tr><td>Use minimal tools (least privilege)</td><td>Grant all tools to every agent</td></tr>
+<tr><td>Define clear output format per phase</td><td>Use vague instructions</td></tr>
+<tr><td>Include quality guardrails</td><td>Skip variable validation</td></tr>
+<tr><td>Mark phases with Before/After</td><td>Use runSubagent for >10 steps</td></tr>
+</tbody></table>
+<h4>Step 2: Complete Orchestrator Example</h4>
+<div class="code-block"><div class="code-header"><span class="file-path">.github/agents/code-processor.agent.md</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-yaml">---
+name: Code-Processor
+description: 'Analyzes code for anti-patterns and applies fixes via sub-agents'
+tools: ['read', 'edit', 'search', 'agent', 'todo']
+model: 'Claude Sonnet 4.5'
+target: 'vscode'
+argument-hint: 'Provide file path to process'
+handoffs:
+    - label: 'Validate File'
+      agent: 'Example-Validator'
+      prompt: 'Analyze for anti-patterns using knowledge_1.md rules'
+    - label: 'Transform File'
+      agent: 'Example-Transformer'
+      prompt: 'Apply fixes for violations found'
+---
+
+## Role
+You are a senior engineer orchestrating a code processing workflow.
+You delegate work to specialists and coordinate their results.
+
+## Dynamic Parameters
+- **filePath**: Path to the file to process
+
+## Variable Extraction Strategy
+1. **From User Input**: Parse file path from argument
+2. **From File Context**: Use current open file
+3. **Ask User**: If not provided, request it
+
+## PROGRESS TRACKING
+Call `manage_todo_list` with:
+```json
+{
+  "operation": "write",
+  "todoList": [
+    { "id": 1, "title": "Gather context", "status": "not-started" },
+    { "id": 2, "title": "Delegate analysis", "status": "not-started" },
+    { "id": 3, "title": "Delegate fixes", "status": "not-started" },
+    { "id": 4, "title": "Compile report", "status": "not-started" }
+  ]
+}
+```
+
+## Workflow
+
+### PHASE 1: Gather Context
+**Before starting:** Mark todo #1 as "in-progress"
+1. Read the file at `${filePath}`
+2. Identify file type and structure
+**Output Variables:**
+- `fileType` = detected type
+- `fileContent` = content summary
+**After completion:** Mark todo #1 as "completed"
+
+### PHASE 2: Delegate Analysis
+**Before starting:** Mark todo #2 as "in-progress"
+**Delegate to:** `Example-Validator` via handoff
+**Input:**
+- File: `${filePath}`
+- Reference: `.copilot_utils/context/knowledge/anti_patterns.md`
+**Expected return:**
+```json
+{ "status": "PASS | FAIL", "violations": [...], "count": 0 }
+```
+**After completion:** Mark todo #2 as "completed"
+
+### PHASE 3: Delegate Fixes
+**Before starting:** Mark todo #3 as "in-progress"
+**Delegate to:** `Example-Transformer` via handoff
+**Input:**
+- File: `${filePath}`
+- Violations: `${analysisResult.violations}`
+- Reference: `.copilot_utils/context/knowledge/code_patterns.md`
+**After completion:** Mark todo #3 as "completed"
+
+### PHASE 4: Compile Report
+**Before starting:** Mark todo #4 as "in-progress"
+1. Collect results from both sub-agents
+2. Generate summary with findings and fixes applied
+**After completion:** Mark todo #4 as "completed"
+
+## Error Handling
+- **Sub-agent timeout**: Retry once, then report failure
+- **Invalid file path**: Ask user for correct path
+
+## Return Format
+**Status:** success | failed
+**Analysis:** PASS | FAIL (violation count)
+**Fixes Applied:** count
+**Output:** Final file path</code></pre></div>
+<h4>Step 3: Quick Reference Checklist</h4>
+<div class="callout tip"><strong>Agent Checklist:</strong>
+<ul>
+<li>[ ] <code>.agent.md</code> file in <code>.github/agents/</code></li>
+<li>[ ] Description 50-150 chars</li>
+<li>[ ] Tools scoped to minimum needed</li>
+<li>[ ] Role section defined</li>
+<li>[ ] Dynamic Parameters listed</li>
+<li>[ ] Variable Extraction Strategy present</li>
+<li>[ ] Workflow with numbered phases</li>
+<li>[ ] Each phase has Before/After markers</li>
+<li>[ ] Return Format defined</li>
+<li>[ ] Knowledge referenced, not embedded</li>
+</ul></div>
+<p><strong>Source:</strong> <a href="https://github.com/endorphin-ai/vs-code-copilot-agents">github.com/endorphin-ai/vs-code-copilot-agents</a></p>
+</div>
+<div class="challenge"><h3>Final Challenge</h3><div class="challenge-card">
+<p>Build a complete orchestrator agent with 2 sub-agents (validator + transformer), a knowledge file for patterns, and a decision tree. Test it in VS Code with <code>@your-agent path/to/file</code>.</p>
+<details><summary>Hint</summary><p>Create 4 files: the orchestrator agent, validator sub-agent, transformer sub-agent, and one knowledge file. The orchestrator delegates validation first, then transformation based on results.</p></details>
+</div></div>
+<div class="takeaways"><h3>Key Takeaways</h3><ul>
+<li>Reference knowledge, don't embed. Decompose into small files.</li>
+<li>Complete agents have: Role, Parameters, Extraction, Workflow (phases), Return Format</li>
+<li>Orchestrators delegate via handoffs (VS Code) or runSubagent (GitHub)</li>
+<li>Every phase: Before/After markers, clear inputs/outputs, error handling</li>
+</ul></div>
+<div class="tutorial-footer"><button class="nav-btn prev" onclick="navigateTo(7)">&larr; Previous</button><button class="complete-btn" onclick="markComplete(8)">Mark Complete &#10003;</button><button class="nav-btn next" onclick="navigateTo(8)" disabled>Course Complete!</button></div>
+</section>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script>
+const tutorials=[{num:1,title:"What Are Copilot Agents?",time:10,difficulty:"beginner"},{num:2,title:"Your First Agent",time:15,difficulty:"beginner"},{num:3,title:"Trees & Knowledge",time:15,difficulty:"beginner"},{num:4,title:"Workflows & Progress",time:20,difficulty:"intermediate"},{num:5,title:"Sub-Agent Orchestration",time:20,difficulty:"intermediate"},{num:6,title:"Prompt Chaining",time:20,difficulty:"intermediate"},{num:7,title:"VS Code vs GitHub.com",time:15,difficulty:"advanced"},{num:8,title:"Best Practices & Example",time:15,difficulty:"advanced"}];
+let currentTutorial=1,completed=JSON.parse(localStorage.getItem('gca-completed')||'[]'),theme=localStorage.getItem('gca-theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');
+function init(){document.body.setAttribute('data-theme',theme);updateThemeIcon();renderNav();navigateTo(1);updateProgress()}
+function renderNav(){document.getElementById('sidebar-nav').innerHTML=tutorials.map(t=>`<a class="nav-item ${t.num===currentTutorial?'active':''} ${completed.includes(t.num)?'completed':''}" onclick="navigateTo(${t.num})"><span class="nav-check">${completed.includes(t.num)?'&#10003;':'&#9675;'}</span><span class="nav-num">${String(t.num).padStart(2,'0')}</span><span class="nav-title">${t.title}</span><span class="nav-meta"><span class="nav-time">${t.time}m</span><span class="diff-dot ${t.difficulty}"></span></span></a>`).join('')}
+function navigateTo(n){if(n<1||n>tutorials.length)return;currentTutorial=n;document.querySelectorAll('.tutorial').forEach(e=>e.classList.remove('active'));const t=document.getElementById(`tutorial-${n}`);if(t)t.classList.add('active');renderNav();updateCompleteButtons();scrollTo(0,0);document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('visible')}
+function markComplete(n){if(!completed.includes(n)){completed.push(n);localStorage.setItem('gca-completed',JSON.stringify(completed));showConfetti()}updateProgress();renderNav();updateCompleteButtons()}
+function updateProgress(){const p=(completed.length/tutorials.length)*100;document.getElementById('progress-fill').style.width=p+'%';document.getElementById('progress-text').textContent=`${completed.length} of ${tutorials.length} completed`}
+function updateCompleteButtons(){tutorials.forEach(t=>{const s=document.getElementById(`tutorial-${t.num}`);if(!s)return;const b=s.querySelector('.complete-btn');if(b&&completed.includes(t.num)){b.textContent='Completed!';b.classList.add('done')}})}
+function resetProgress(){if(!confirm('Reset all progress?'))return;completed=[];localStorage.removeItem('gca-completed');updateProgress();renderNav();document.querySelectorAll('.complete-btn').forEach(b=>{b.textContent='Mark Complete \u2713';b.classList.remove('done')})}
+function toggleTheme(){theme=theme==='dark'?'light':'dark';document.body.setAttribute('data-theme',theme);localStorage.setItem('gca-theme',theme);updateThemeIcon()}
+function updateThemeIcon(){document.querySelector('.theme-toggle').textContent=theme==='dark'?'\u263E':'\u2600'}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('visible')}
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('search-input').addEventListener('input',e=>{const q=e.target.value.toLowerCase();document.querySelectorAll('.nav-item').forEach(i=>{i.style.display=i.querySelector('.nav-title').textContent.toLowerCase().includes(q)?'flex':'none'})})});
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowLeft')navigateTo(currentTutorial-1);if(e.key==='ArrowRight')navigateTo(currentTutorial+1);if(e.key==='Escape')toggleSidebar();if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus()}});
+function copyCode(b){navigator.clipboard.writeText(b.closest('.code-block').querySelector('code').textContent).then(()=>{b.textContent='Copied!';b.classList.add('copied');setTimeout(()=>{b.textContent='Copy';b.classList.remove('copied')},2000)})}
+function showConfetti(){const c=['#7c6aef','#4ade80','#facc15','#60a5fa','#f87171','#fb923c'];for(let i=0;i<30;i++){const e=document.createElement('div');e.className='confetti';e.style.left=Math.random()*100+'vw';e.style.top=Math.random()*30+'vh';e.style.background=c[~~(Math.random()*c.length)];e.style.animationDelay=Math.random()*.5+'s';e.style.width=(4+Math.random()*8)+'px';e.style.height=(4+Math.random()*8)+'px';document.body.appendChild(e);setTimeout(()=>e.remove(),2000)}}
+init();
+</script>
+</body>
+</html>
